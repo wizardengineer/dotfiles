@@ -58,6 +58,16 @@ return {
           opts = { skip = true },
         },
       },
+
+    lsp = {
+        -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
+        override = {
+          ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
+          ['vim.lsp.util.stylize_markdown'] = true,
+          ['cmp.entry.get_documentation'] = true,
+        },
+      },
+
       presets = {
         lsp_doc_border = true,
       },
@@ -66,6 +76,10 @@ return {
       "MunifTanjim/nui.nvim",
       "rcarriga/nvim-notify",
     },
+
+    config = function()
+      require("noice.lsp").hover()
+    end
   },
 
   {
@@ -83,16 +97,17 @@ return {
 	-- local liblldb_path = extension_path .. "lldb/lib/liblldb.so"
       local cfg = require('rustaceanvim.config')
       vim.fn.jobstart('cargo build')
-      vim.lsp.handlers["textDocument/hover"] = function(_, _, _) end
+      -- vim.lsp.handlers["textDocument/hover"] = function(_, _, _) end
 
       vim.g.rustaceanvim = {
         dap = {
           adapter = cfg.get_codelldb_adapter(codelldb_path, liblldb_path),
         },
 
+        -- Don't work fr
         FloatWinConfig = {
           auto_focus = false,
-          enable = true 
+          enable = false
         }
       }
     end
@@ -164,6 +179,7 @@ return {
     opts = {
       ensure_installed = {
         "clangd",
+        "clang-format",
         "rust_analyzer"
       }
     }
@@ -238,11 +254,13 @@ return {
 		-- TELESCOPE
 
 		{ 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
+
 		{
 			"nvim-telescope/telescope-frecency.nvim",
 			-- install the latest stable version
 			version = "*",
 		},
+
 		{
 			'nvim-telescope/telescope.nvim',
 			tag = '0.1.8',
@@ -286,7 +304,7 @@ return {
 				-- SET UP KEYMAP FOR LSP, POTENTIALLY VIA TELESCOPE
 				vim.keymap.set("n", "<leader>la", ":lua vim.lsp.buf.code_action()<CR>") -- Show code actions
 				vim.keymap.set("n", "<leader>lr", ":lua vim.lsp.buf.rename()<CR>") -- Rename symbols with scope-correctness
-				vim.keymap.set("n", "<leader>ldf", ":lua vim.lsp.buf.definition()<CR>", {}) -- Go to definition
+				vim.keymap.set("n", "gd", ":lua vim.lsp.buf.definition()<CR>", { noremap = true, silent = true }) -- Go to definition
 				vim.keymap.set("n", "<leader>ldc", ":lua vim.lsp.buf.declaration()<CR>") -- Go to declaration
 
 				vim.keymap.set("n", "<leader>m", builtin.lsp_implementations, {}) -- Go to implementation
@@ -297,4 +315,26 @@ return {
 			end
 		}
 	},
+
+  {
+	"badumbatish/brt.nvim",
+	-- dir = "~/Developer/nvim_proj/brt.nvim",
+	-- dev = { true },
+	-- @t
+	config = function()
+		local project_map = {
+			["sammine-lang/"] = {
+				build_command =
+				"cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1  && cmake --build build -j",
+				run_command = "./build/src/sammine -f unit-tests/artifacts/valid_grammar.txt --llvm-ir --diagnostics",
+				test_command = "ctest --test-dir build --output-on-failure",
+				name = "sammine-lang"
+			},
+    }
+		local brt = require("brt")
+		brt.set_project_map(project_map)
+
+		require("brt").setup()
+	end
+  }
 }

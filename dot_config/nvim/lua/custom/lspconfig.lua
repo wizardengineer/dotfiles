@@ -14,13 +14,17 @@ lspconfig.clangd.setup {
 }
 
 -- lspconfig.rust_analyzer.setup {
---     settings = {
---         ["rust-analyzer"] = {
---             hover = {
---                 enabled = false, -- Disable rust-analyzer's default hover
---             }
---         }
---     },
+--   on_attach = function(client, bufnr)
+--     client.server_capabilities.signatureHelpProvider = false
+--     vim.lsp.buf.hover.Opts = {
+--         focusable = false,
+--         focus = false
+--       }
+--
+--     on_attach(client, bufnr)
+--   end,
+--
+--   capabilities = capabilities,
 -- }
 --
 -- lspconfig.rust_analyzer.setup {

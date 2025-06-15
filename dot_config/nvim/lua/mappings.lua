@@ -9,6 +9,7 @@ map("i", "jk", "<ESC>")
 
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
 
+
 -- Nvim DAP
 map("n", "<Leader>dl", "<cmd>lua require'dap'.step_into()<CR>", { desc = "Debugger step into" })
 map("n", "<Leader>dj", "<cmd>lua require'dap'.step_over()<CR>", { desc = "Debugger step over" })
@@ -31,9 +32,13 @@ map("n", "<Leader>dt", "<cmd>lua vim.cmd('RustLsp testables')<CR>", { desc = "De
 map("n", "<leader>n", "<cmd>Navbuddy<CR>", { noremap = true, silent = true })
 
 -- Nvim tree
-map("n", "<leader>}", "<cmd>NvimTreeFocus<CR>", { noremap = true, silent = true })
+map("n", "<leader>]", "<cmd>NvimTreeFocus<CR>", { noremap = true, silent = true })
 map("n", "<leader>e", "<cmd>NvimTreeToggle<CR>", { noremap = true, silent = true })
 
 -- Nvim Overwriting...nice custom Key. Shout to Jas
 map("n", "<leader>s", "<cmd>w<CR>", { noremap = true, silent = true })
 map("n", "<leader>q", "<cmd>wq<CR>", { noremap = true, silent = true })
+
+-- Auto formatting for Code
+-- map("n", "<Leader>s", "<cmd> lua vim.lsp.buf.format()<CR>", {})
+

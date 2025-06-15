@@ -1,5 +1,5 @@
 require "custom.autocmds"
-require "custom.navigations"
+-- require "custom.lspconfig"
 
 local vim = vim
 local opt = vim.opt
