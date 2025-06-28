@@ -250,71 +250,71 @@ return {
       vim.keymap.set('n', '<leader>yh', "<cmd>GitBlameCopySHA<CR>")
 
   },
-  	{
-		-- TELESCOPE
-
-		{ 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
-
-		{
-			"nvim-telescope/telescope-frecency.nvim",
-			-- install the latest stable version
-			version = "*",
-		},
-
-		{
-			'nvim-telescope/telescope.nvim',
-			tag = '0.1.8',
-			-- or                              , branch = '0.1.x',
-			dependencies = { 'nvim-lua/plenary.nvim',
-				"nvim-telescope/telescope-live-grep-args.nvim",
-			},
-
-			config = function()
-				require('telescope').load_extension('fzf')
-				require('telescope').load_extension('live_grep_args')
-				require("telescope").load_extension "frecency"
-				local live_grep_args_shortcuts = require("telescope-live-grep-args.shortcuts")
-				local builtin = require('telescope.builtin')
-
-				require('telescope').setup {
-					defaults = {
-						cache_picker = {
-							num_pickers = 20
-						}
-						-- Default configuration for telescope goes here:
-						-- config_key = value,
-						-- ..
-					}, }
-
-
-				vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
-				vim.keymap.set("n", "<leader>fg",
-					":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>")
-				vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
-				vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
-				vim.keymap.set('n', '/', builtin.current_buffer_fuzzy_find, {})
-
-				vim.keymap.set('n', '<leader>fr', builtin.pickers, {})
-				vim.keymap.set('n', '<leader>fp', builtin.pickers, {})
-
-				vim.keymap.set("n", "<leader>g", live_grep_args_shortcuts.grep_word_under_cursor, { noremap = true, silent = true })
-				vim.keymap.set("x", "<leader>g", live_grep_args_shortcuts.grep_visual_selection, { noremap = true, silent = true })
-
-
-				-- SET UP KEYMAP FOR LSP, POTENTIALLY VIA TELESCOPE
-				vim.keymap.set("n", "<leader>la", ":lua vim.lsp.buf.code_action()<CR>") -- Show code actions
-				vim.keymap.set("n", "<leader>lr", ":lua vim.lsp.buf.rename()<CR>") -- Rename symbols with scope-correctness
-				vim.keymap.set("n", "gd", ":lua vim.lsp.buf.definition()<CR>", { noremap = true, silent = true }) -- Go to definition
-				vim.keymap.set("n", "<leader>ldc", ":lua vim.lsp.buf.declaration()<CR>") -- Go to declaration
-
-				vim.keymap.set("n", "<leader>m", builtin.lsp_implementations, {}) -- Go to implementation
-				vim.keymap.set("n", "<leader>i", ":lua vim.lsp.buf.incoming_calls()<CR>", {}) -- Show incoming calls to the function under the cursor
-				vim.keymap.set("n", "<leader>o", ":lua vim.lsp.buf.outgoing_calls()<CR>", {}) -- Show outgoing calls from the function under the cursor
-				vim.keymap.set("n", "<leader>td", builtin.lsp_type_definitions)   -- Go to type definition
-				vim.keymap.set("n", "<leader>th", ":lua vim.lsp.buf.typehierachy()<CR>") -- Show type hierarchy
-			end
-		}
-	},
+		-- 	{
+		-- -- TELESCOPE
+		--
+		-- { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
+		--
+		-- {
+		-- 	"nvim-telescope/telescope-frecency.nvim",
+		-- 	-- install the latest stable version
+		-- 	version = "*",
+		-- },
+		--
+	-- 	{
+	-- 		'nvim-telescope/telescope.nvim',
+	-- 		tag = '0.1.8',
+	-- 		-- or                              , branch = '0.1.x',
+	-- 		dependencies = { 'nvim-lua/plenary.nvim',
+	-- 			"nvim-telescope/telescope-live-grep-args.nvim",
+	-- 		},
+	--
+	-- 		config = function()
+	-- 			require('telescope').load_extension('fzf')
+	-- 			require('telescope').load_extension('live_grep_args')
+	-- 			require("telescope").load_extension "frecency"
+	-- 			local live_grep_args_shortcuts = require("telescope-live-grep-args.shortcuts")
+	-- 			local builtin = require('telescope.builtin')
+	--
+	-- 			require('telescope').setup {
+	-- 				defaults = {
+	-- 					cache_picker = {
+	-- 						num_pickers = 20
+	-- 					}
+	-- 					-- Default configuration for telescope goes here:
+	-- 					-- config_key = value,
+	-- 					-- ..
+	-- 				}, }
+	--
+	--
+	-- 			vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
+	-- 			vim.keymap.set("n", "<leader>fg",
+	-- 				":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>")
+	-- 			vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
+	-- 			vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+	-- 			vim.keymap.set('n', '/', builtin.current_buffer_fuzzy_find, {})
+	--
+	-- 			vim.keymap.set('n', '<leader>fr', builtin.pickers, {})
+	-- 			vim.keymap.set('n', '<leader>fp', builtin.pickers, {})
+	--
+	-- 			vim.keymap.set("n", "<leader>g", live_grep_args_shortcuts.grep_word_under_cursor, { noremap = true, silent = true })
+	-- 			vim.keymap.set("x", "<leader>g", live_grep_args_shortcuts.grep_visual_selection, { noremap = true, silent = true })
+	--
+	--
+	-- 			-- SET UP KEYMAP FOR LSP, POTENTIALLY VIA TELESCOPE
+	-- 			vim.keymap.set("n", "<leader>la", ":lua vim.lsp.buf.code_action()<CR>") -- Show code actions
+	-- 			vim.keymap.set("n", "<leader>lr", ":lua vim.lsp.buf.rename()<CR>") -- Rename symbols with scope-correctness
+	-- 			vim.keymap.set("n", "gd", ":lua vim.lsp.buf.definition()<CR>", { noremap = true, silent = true }) -- Go to definition
+	-- 			vim.keymap.set("n", "<leader>ldc", ":lua vim.lsp.buf.declaration()<CR>") -- Go to declaration
+	--
+	-- 			vim.keymap.set("n", "<leader>m", builtin.lsp_implementations, {}) -- Go to implementation
+	-- 			vim.keymap.set("n", "<leader>i", ":lua vim.lsp.buf.incoming_calls()<CR>", {}) -- Show incoming calls to the function under the cursor
+	-- 			vim.keymap.set("n", "<leader>o", ":lua vim.lsp.buf.outgoing_calls()<CR>", {}) -- Show outgoing calls from the function under the cursor
+	-- 			vim.keymap.set("n", "<leader>td", builtin.lsp_type_definitions)   -- Go to type definition
+	-- 			vim.keymap.set("n", "<leader>th", ":lua vim.lsp.buf.typehierachy()<CR>") -- Show type hierarchy
+	-- 		end
+	-- 	}
+	-- },
 
   {
 	"badumbatish/brt.nvim",
@@ -336,5 +336,46 @@ return {
 
 		require("brt").setup()
 	end
+  },
+
+  {
+    "ibhagwan/fzf-lua",
+
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+
+    config = function()
+      local fzf_lua = require("fzf-lua")
+
+      -- -- list the modes and keys you intend to use
+      -- local mappings = {
+      --   n = { "<leader>ff", "<leader>fg", "<leader>fb", "<leader>fh", "/", "<leader>fr",
+      --         "<leader>fi", "<leader>fo", "<leader>fm", "<leader>fp", "<leader>fd",
+      --         "<leader>gw", "<leader>gr", "gd", },
+      --   x = { "<leader>g", },
+      -- }
+      -- -- delete any prior mapping for those keys
+      -- for mode, keys in pairs(mappings) do
+      --   for _, key in ipairs(keys) do
+      --     pcall(vim.keymap.del, mode, key)
+      --   end
+      -- end
+
+      -- now set only your desired mappings
+      vim.keymap.set('n', '<leader>ff', fzf_lua.files, { noremap=true, silent=true, desc="Find files" })
+      vim.keymap.set('n', '<leader>fg', fzf_lua.live_grep_native, { noremap=true, silent=true, desc="Find words" })
+      vim.keymap.set('n', '<leader>fb', fzf_lua.grep, { noremap=true, silent=true, desc="Find buffers" })
+      vim.keymap.set('n', '<leader>fh', fzf_lua.help_tags, { noremap=true, silent=true, desc="Find help tags" })
+      vim.keymap.set('n', '/',       fzf_lua.lgrep_curbuf, { noremap=true, silent=true, desc="Find in current buffer" })
+      vim.keymap.set('n', '<leader>fr', fzf_lua.resume, { noremap=true, silent=true, desc="Resume last fzf search" })
+      vim.keymap.set('n', '<leader>fi', fzf_lua.lsp_incoming_calls, { noremap=true, silent=true, desc="LSP incoming calls" })
+      vim.keymap.set('n', '<leader>fo', fzf_lua.lsp_outgoing_calls, { noremap=true, silent=true, desc="LSP outgoing calls" })
+      vim.keymap.set('n', '<leader>fm', fzf_lua.man_pages, { noremap=true, silent=true, desc="Find man pages" })
+      vim.keymap.set('n', '<leader>fp', fzf_lua.search_history, { noremap=true, silent=true, desc="Search history" })
+      vim.keymap.set('n', '<leader>fd', fzf_lua.lsp_finder, { noremap=true, silent=true, desc="LSP diagnostics" })
+      vim.keymap.set('n', '<leader>gw', fzf_lua.grep_cword, { noremap=true, silent=true, desc="Grep word under cursor" })
+      vim.keymap.set('n', '<leader>gr', fzf_lua.lsp_references, { noremap=true, silent=true, desc="LSP references" })
+      vim.keymap.set('x', '<leader>g', fzf_lua.grep_visual, { noremap=true, silent=true, desc="Grep visual selection" })
+      vim.keymap.set('n', '<leader>la', fzf_lua.lsp_code_actions, { noremap=true, silent=true, desc="LSP code actions" })
+    end
   }
 }

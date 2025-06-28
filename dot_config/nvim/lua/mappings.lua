@@ -8,7 +8,7 @@ map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
-
+map('n', 'gd', vim.lsp.buf.definition, { noremap=true, silent=true, desc="Go to definition" })
 
 -- Nvim DAP
 map("n", "<Leader>dl", "<cmd>lua require'dap'.step_into()<CR>", { desc = "Debugger step into" })

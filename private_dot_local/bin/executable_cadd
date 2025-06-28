@@ -1,0 +1,31 @@
+# credit too: https://github.com/badumbatish/dotfiles/blob/main/private_dot_local/bin/executable_cadd
+
+# INFO: cadd STANDS FOR CHEZMOI ADDING ALL RELATED FILE
+#
+# Add zsh gitconfig
+chezmoi add ~/.zshrc ~/.gitconfig
+
+# INFO: Tmux
+# chezmoi add ~/.tmux.conf
+
+# INFO: Neovim config
+rm -rf ~/.local/share/chezmoi/dot_config/nvim/
+chezmoi add ~/.config/nvim
+
+# INFO: Executable
+chezmoi add ~/.local/bin/cadd ~/.local/bin/cinstall ~/.local/bin/cpush 
+
+# INFO: ccache
+chezmoi add ~/.ccache/ccache.conf
+
+
+# INFO: COMMIT ALL ADDs
+pushd . > /dev/null
+
+cd ~/.local/share/chezmoi/
+git add .
+git status
+git commit -m "Automatic update via ~/.local/bin/cadd"
+
+popd > /dev/null
+

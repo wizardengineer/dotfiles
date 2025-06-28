@@ -1,0 +1,9 @@
+# INFO: CPUSH STANDS FOR CHEZMOI CD, GIT PUSH, CD -
+
+pushd . > /dev/null
+
+cd ~/.local/share/chezmoi/
+git push 
+
+popd > /dev/null
+
