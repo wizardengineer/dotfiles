@@ -3,7 +3,7 @@
 # INFO: cadd STANDS FOR CHEZMOI ADDING ALL RELATED FILE
 #
 # Add zsh gitconfig
-chezmoi add ~/.zshrc ~/.gitconfig
+chezmoi add ~/.zshrc ~/.gitconfig ~/.tmux.conf
 
 # INFO: Tmux
 # chezmoi add ~/.tmux.conf

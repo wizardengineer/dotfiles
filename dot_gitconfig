@@ -6,6 +6,9 @@
 [interactive]
     diffFilter = delta --color-only
 
+[alias]
+    copybr= "!git branch --show-current | pbcopy"
+    w-lease = "!git push --force-with-lease origin"
 [delta]
     navigate = true  # use n and N to move between diff sections
     dark = true      # or light = true, or omit for auto-detection
