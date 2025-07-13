@@ -87,30 +87,30 @@ return {
     version = '^5', -- Recommended
     lazy = false, -- This plugin is already lazy
     ft = "rust",
-    config = function ()
-      local mason_registry = require('mason-registry')
-      local codelldb = mason_registry.get_package("codelldb")
-      local extension_path = codelldb:get_install_path() .. "/extension/"
-      local codelldb_path = extension_path .. "adapter/codelldb"
-      local liblldb_path = extension_path.. "lldb/lib/liblldb.dylib"
-	-- If you are on Linux, replace the line above with the line below:
-	-- local liblldb_path = extension_path .. "lldb/lib/liblldb.so"
-      local cfg = require('rustaceanvim.config')
-      vim.fn.jobstart('cargo build')
-      -- vim.lsp.handlers["textDocument/hover"] = function(_, _, _) end
-
-      vim.g.rustaceanvim = {
-        dap = {
-          adapter = cfg.get_codelldb_adapter(codelldb_path, liblldb_path),
-        },
-
-        -- Don't work fr
-        FloatWinConfig = {
-          auto_focus = false,
-          enable = false
-        }
-      }
-    end
+	--    config = function ()
+	--      local mason_registry = require('mason-registry')
+	--      local codelldb = mason_registry.get_package("codelldb")
+	--      local extension_path = codelldb:get_install_path() .. "/extension/"
+	--      local codelldb_path = extension_path .. "adapter/codelldb"
+	--      local liblldb_path = extension_path.. "lldb/lib/liblldb.dylib"
+	-- -- If you are on Linux, replace the line above with the line below:
+	-- -- local liblldb_path = extension_path .. "lldb/lib/liblldb.so"
+	--      local cfg = require('rustaceanvim.config')
+	--      vim.fn.jobstart('cargo build')
+	--      -- vim.lsp.handlers["textDocument/hover"] = function(_, _, _) end
+	--
+	--      vim.g.rustaceanvim = {
+	--        dap = {
+	--          adapter = cfg.get_codelldb_adapter(codelldb_path, liblldb_path),
+	--        },
+	--
+	--        -- Don't work fr
+	--        FloatWinConfig = {
+	--          auto_focus = false,
+	--          enable = false
+	--        }
+	--      }
+	--    end
   },
 
   {
@@ -222,14 +222,17 @@ return {
   },
 
   {
-  	"nvim-treesitter/nvim-treesitter",
-  	opts = {
-  		ensure_installed = {
-  			"vim", "lua", "vimdoc",
-       "html", "css"
-  		},
-  	},
+    "nvim-treesitter/nvim-treesitter",
+    opts = {
+      ensure_installed = {
+        "vim", "lua", "vimdoc",
+        "html", "css", "cpp",
+        "rust", "java", "javascript",
+        "python"
+      },
+    },
   },
+
     { -- GIT BLAME :: Got this from https://github.com/badumbatish/dotfiles/blob/aa8f32216ea0b8d29da8446a0c597d13a3fa5666/dot_config/nvim/lua/plugins/gits.lua#L71
       "f-person/git-blame.nvim",
       -- load the plugin at startup
@@ -250,71 +253,6 @@ return {
       vim.keymap.set('n', '<leader>yh', "<cmd>GitBlameCopySHA<CR>")
 
   },
-		-- 	{
-		-- -- TELESCOPE
-		--
-		-- { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
-		--
-		-- {
-		-- 	"nvim-telescope/telescope-frecency.nvim",
-		-- 	-- install the latest stable version
-		-- 	version = "*",
-		-- },
-		--
-	-- 	{
-	-- 		'nvim-telescope/telescope.nvim',
-	-- 		tag = '0.1.8',
-	-- 		-- or                              , branch = '0.1.x',
-	-- 		dependencies = { 'nvim-lua/plenary.nvim',
-	-- 			"nvim-telescope/telescope-live-grep-args.nvim",
-	-- 		},
-	--
-	-- 		config = function()
-	-- 			require('telescope').load_extension('fzf')
-	-- 			require('telescope').load_extension('live_grep_args')
-	-- 			require("telescope").load_extension "frecency"
-	-- 			local live_grep_args_shortcuts = require("telescope-live-grep-args.shortcuts")
-	-- 			local builtin = require('telescope.builtin')
-	--
-	-- 			require('telescope').setup {
-	-- 				defaults = {
-	-- 					cache_picker = {
-	-- 						num_pickers = 20
-	-- 					}
-	-- 					-- Default configuration for telescope goes here:
-	-- 					-- config_key = value,
-	-- 					-- ..
-	-- 				}, }
-	--
-	--
-	-- 			vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
-	-- 			vim.keymap.set("n", "<leader>fg",
-	-- 				":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>")
-	-- 			vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
-	-- 			vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
-	-- 			vim.keymap.set('n', '/', builtin.current_buffer_fuzzy_find, {})
-	--
-	-- 			vim.keymap.set('n', '<leader>fr', builtin.pickers, {})
-	-- 			vim.keymap.set('n', '<leader>fp', builtin.pickers, {})
-	--
-	-- 			vim.keymap.set("n", "<leader>g", live_grep_args_shortcuts.grep_word_under_cursor, { noremap = true, silent = true })
-	-- 			vim.keymap.set("x", "<leader>g", live_grep_args_shortcuts.grep_visual_selection, { noremap = true, silent = true })
-	--
-	--
-	-- 			-- SET UP KEYMAP FOR LSP, POTENTIALLY VIA TELESCOPE
-	-- 			vim.keymap.set("n", "<leader>la", ":lua vim.lsp.buf.code_action()<CR>") -- Show code actions
-	-- 			vim.keymap.set("n", "<leader>lr", ":lua vim.lsp.buf.rename()<CR>") -- Rename symbols with scope-correctness
-	-- 			vim.keymap.set("n", "gd", ":lua vim.lsp.buf.definition()<CR>", { noremap = true, silent = true }) -- Go to definition
-	-- 			vim.keymap.set("n", "<leader>ldc", ":lua vim.lsp.buf.declaration()<CR>") -- Go to declaration
-	--
-	-- 			vim.keymap.set("n", "<leader>m", builtin.lsp_implementations, {}) -- Go to implementation
-	-- 			vim.keymap.set("n", "<leader>i", ":lua vim.lsp.buf.incoming_calls()<CR>", {}) -- Show incoming calls to the function under the cursor
-	-- 			vim.keymap.set("n", "<leader>o", ":lua vim.lsp.buf.outgoing_calls()<CR>", {}) -- Show outgoing calls from the function under the cursor
-	-- 			vim.keymap.set("n", "<leader>td", builtin.lsp_type_definitions)   -- Go to type definition
-	-- 			vim.keymap.set("n", "<leader>th", ":lua vim.lsp.buf.typehierachy()<CR>") -- Show type hierarchy
-	-- 		end
-	-- 	}
-	-- },
 
   {
 	"badumbatish/brt.nvim",
@@ -347,21 +285,7 @@ return {
     config = function()
       local fzf_lua = require("fzf-lua")
 
-      -- -- list the modes and keys you intend to use
-      -- local mappings = {
-      --   n = { "<leader>ff", "<leader>fg", "<leader>fb", "<leader>fh", "/", "<leader>fr",
-      --         "<leader>fi", "<leader>fo", "<leader>fm", "<leader>fp", "<leader>fd",
-      --         "<leader>gw", "<leader>gr", "gd", },
-      --   x = { "<leader>g", },
-      -- }
-      -- -- delete any prior mapping for those keys
-      -- for mode, keys in pairs(mappings) do
-      --   for _, key in ipairs(keys) do
-      --     pcall(vim.keymap.del, mode, key)
-      --   end
-      -- end
-
-      -- now set only your desired mappings
+        -- now set only your desired mappings
       vim.keymap.set('n', '<leader>ff', fzf_lua.files, { noremap=true, silent=true, desc="Find files" })
       vim.keymap.set('n', '<leader>fg', fzf_lua.live_grep_native, { noremap=true, silent=true, desc="Find words" })
       vim.keymap.set('n', '<leader>fb', fzf_lua.grep, { noremap=true, silent=true, desc="Find buffers" })
@@ -378,5 +302,5 @@ return {
       vim.keymap.set('x', '<leader>g', fzf_lua.grep_visual, { noremap=true, silent=true, desc="Grep visual selection" })
       vim.keymap.set('n', '<leader>la', fzf_lua.lsp_code_actions, { noremap=true, silent=true, desc="LSP code actions" })
     end
-  }
+  },
 }
