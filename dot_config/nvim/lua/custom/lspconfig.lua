@@ -13,6 +13,19 @@ lspconfig.clangd.setup {
   capabilities = capabilities,
 }
 
+vim.keymap.set("n", "<leader>c", function()
+    vim.cmd("LspClangdSwitchSourceHeader")
+end, { desc = "Open matching source file in current buffer" })
+
+-- vim.keymap.set("n", "<leader>lr", vim.lsp.buf.rename,
+--     { noremap = true, silent = true, desc = "Rename" })
+
+vim.keymap.set("n", "<leader>lD", vim.diagnostic.goto_prev,
+    { noremap = true, silent = true, desc = "Go to previous diagnostics error" })
+
+vim.keymap.set("n", "<leader>ld", vim.diagnostic.goto_next,
+    { noremap = true, silent = true, desc = "Go to next diagnostics error" })
+
 -- lspconfig.rust_analyzer.setup {
 --   on_attach = function(client, bufnr)
 --     client.server_capabilities.signatureHelpProvider = false
