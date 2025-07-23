@@ -5,10 +5,12 @@
 local map = vim.keymap.set
 
 -- delete the old Telescope binding
-vim.keymap.del("n", "<leader>ff")
-vim.keymap.set('n', '<leader>ff', "<cmd>FzfLua files<CR>",               { noremap=true, silent=true, desc=" FzfLua: find files"         })
+-- vim.keymap.del("n", "<leader>ff")
+-- vim.keymap.set('n', '<leader>ff', "<cmd>FzfLua files<CR>",               { noremap=true, silent=true, desc=" FzfLua: find files"         })
 map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
+
+vim.keymap.set('n', '<leader>S', '<cmd>lua require("spectre").toggle()<CR>', { desc = "Toggle Spectre" })
 
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
 map('n', 'gd', vim.lsp.buf.definition, { noremap=true, silent=true, desc="Go to definition" })
@@ -43,8 +45,11 @@ map("n", "<leader>e", "<cmd>NvimTreeToggle<CR>", { noremap = true, silent = true
 -- Nvim Overwriting...nice custom Key. Shout to Jas
 map("n", "<leader>s", "<cmd>w<CR>", { noremap = true, silent = true })
 map("n", "<leader>q", "<cmd>wq<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>c", function()
+    vim.cmd("LspClangdSwitchSourceHeader")
+end, { desc = "Open matching source file in current buffer" })
 
--- I copied & paste nvchad mappings, for modular usage...and to fix a stupid bugreport
+-- I copied & paste nvchad mappings, for modular usage...and to fix a stupid bug 
 map("i", "<C-b>", "<ESC>^i", { desc = "move beginning of line" })
 map("i", "<C-e>", "<End>", { desc = "move end of line" })
 map("i", "<C-h>", "<Left>", { desc = "move left" })

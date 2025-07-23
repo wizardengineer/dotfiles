@@ -3,6 +3,8 @@
 -- my morals are just starting to kick in
 
 return {
+  { "alexghergh/nvim-tmux-navigation" },
+
   {
     "stevearc/conform.nvim",
     -- event = 'BufWritePre', -- uncomment for format on save
@@ -292,6 +294,13 @@ return {
   {
     'Bekaboo/dropbar.nvim',
     -- optional, but required for fuzzy finder support
+    config = function()
+    end
+  },
+
+  {
+    'nvim-pack/nvim-spectre',
+    dependencies = {'nvim-lua/plenary.nvim'},
     config = function()
     end
   },
@@ -1030,8 +1039,8 @@ return {
         vim.keymap.set('n', '<leader>fh', fzf_lua.help_tags,          { noremap=true, silent=true, desc=" FzfLua: help tags"         })
         vim.keymap.set('n', '<leader>fr', fzf_lua.resume,             { noremap=true, silent=true, desc=" FzfLua: resume last search" })
         vim.keymap.set('n', '<leader>fp', fzf_lua.search_history,     { noremap=true, silent=true, desc=" FzfLua: search history"     })
-        -- vim.keymap.set('n', '<leader>fd', fzf_lua.diagnostics,        { noremap=true, silent=true, desc=" FzfLua: diagnostics"        })
 
+        vim.keymap.set("n", '<leader>fs',fzf_lua.treesitter, { desc =  "Symbols in current buffer" })
         -- grep under cursor / visual:
         vim.keymap.set('n', '<leader>gw', fzf_lua.grep_cword,         { noremap=true, silent=true, desc=" FzfLua: grep under cursor" })
         vim.keymap.set('x', '<leader>g', fzf_lua.grep_visual,         { noremap=true, silent=true, desc=" FzfLua: grep selection"    })
@@ -1042,6 +1051,25 @@ return {
         vim.keymap.set('n', '<leader>fa', fzf_lua.lsp_code_actions,   { noremap=true, silent=true, desc="󰠴 FzfLua: LSP code actions"   })
         vim.keymap.set('n', '<leader>fd', fzf_lua.lsp_finder,         { noremap=true, silent=true, desc="󰍩 FzfLua: LSP finder"         })
         vim.keymap.set('n', '<leader>fr', fzf_lua.man_pages,          { noremap=true, silent=true, desc=" FzfLua: man pages"           })
+
+
+        -- vim.api.nvim_create_user_command("FR", function(opts)
+        --   vim.api.nvim_command(string.format("cdo s/%s/%s", opts.fargs[1], opts.fargs[2]))
+        --   vim.api.nvim_command("cfdo update")
+        -- end, { nargs = "*" })
+        --
+        --
+        -- vim.api.nvim_set_keymap(
+        --   "n",
+        --   "<leader>r",
+        --   ":FR",
+        --   { noremap = true })
+        --
+        --
+        --
+
+
+
     end
   },
 }
