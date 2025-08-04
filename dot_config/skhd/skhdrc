@@ -1,0 +1,8 @@
+.define toggle_app : open -a "{{1}}" || osascript -e 'tell app "{{1}}" to quit'
+
+cmd - return: open -a "ghostty" 
+cmd - b: @toggle_app("Zen")
+cmd - g: @toggle_app("ChatGpt")
+cmd - d: @toggle_app("Discord")
+cmd - e : @toggle_app("Finder")
+cmd - o : @toggle_app("Obsidian")
