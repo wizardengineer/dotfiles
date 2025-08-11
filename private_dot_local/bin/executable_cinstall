@@ -3,9 +3,6 @@ brew install starship fzf curl nodejs npm python3 git kitty bat nvim tmux neofet
 
 brew install ccache cmake lld
 
-echo "✅ Installing Package manager for tmux"
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-
 # Install lazygit...pretty please
 brew install jesseduffield/lazygit/lazygit
 

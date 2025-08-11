@@ -7,12 +7,14 @@ autocmd("VimEnter", {
   command = ":NvimTreeToggle",
 })
 
+-- Format C/C++ files on save, EXCEPT in llvm-project
 autocmd("BufWritePre", {
-  pattern = { "*.c", "*.cpp", "*.h", "*.hpp" },
-  -- adjust the patterns to match the filetypes you want formatted
+  pattern = { "*.c", "*.cpp", "*.h", "*.hpp", "*.inc" },
   callback = function()
-    vim.lsp.buf.format({ async = false })
+    -- Check if we're in llvm-project
+    local filepath = vim.fn.expand("%:p")
+    if not filepath:match("llvm%-project") then
+      vim.lsp.buf.format({ async = false })
+    end
   end,
 })
-
-

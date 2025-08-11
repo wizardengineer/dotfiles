@@ -13,7 +13,7 @@ rm -rf ~/.local/share/chezmoi/dot_config/nvim/
 chezmoi add ~/.config/nvim
 
 # INFO: Executable
-chezmoi add ~/.local/bin/cadd ~/.local/bin/cinstall ~/.local/bin/cpush ~/.config/skhd/skhdrc 
+chezmoi add ~/.local/bin/cadd ~/.local/bin/cinstall ~/.local/bin/cpush 
 
 # INFO: ccache
 chezmoi add ~/.ccache/ccache.conf

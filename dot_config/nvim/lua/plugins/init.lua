@@ -3,8 +3,29 @@
 -- my morals are just starting to kick in
 
 return {
-  { "alexghergh/nvim-tmux-navigation" },
   { "sitiom/nvim-numbertoggle" },
+  {
+    "rhysd/vim-llvm",
+    ft = { "llvm", "tablegen", "mir" }, -- Load only for LLVM-related filetypes
+    config = function()
+      -- Optional: Disable extended features if you want only official LLVM support
+      -- vim.g.llvm_extends_official = 0
+      
+      -- Optional: Disable default mappings if you want to set your own
+      -- vim.g.llvm_ext_no_mapping = 1
+      
+      -- Optional: Change the lli executable path
+      -- vim.g.llvm_ext_lli_executable = "/path/to/custom/lli"
+      
+      -- If you disabled default mappings, you can set custom ones here:
+      -- vim.api.nvim_create_autocmd("FileType", {
+      --   pattern = "llvm",
+      --   callback = function()
+      --     vim.keymap.set("n", "gd", "<Plug>(llvm-goto-definition)", { buffer = true, silent = true })
+      --   end,
+      -- })
+    end,
+  },
   {
     "stevearc/conform.nvim",
     -- event = 'BufWritePre', -- uncomment for format on save
