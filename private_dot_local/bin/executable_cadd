@@ -14,6 +14,8 @@ chezmoi add ~/.config/nvim
 
 # INFO: Executable
 chezmoi add ~/.local/bin/cadd ~/.local/bin/cinstall ~/.local/bin/cpush 
+chezmoi add ~/.local/bin/fjmp
+chezmoi add ~/.local/bin/sesh
 
 # INFO: ccache
 chezmoi add ~/.ccache/ccache.conf

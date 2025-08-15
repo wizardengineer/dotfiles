@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+# Function to generate the list of directories and files
+get_items() {
+    find ~/GitDownloads/ ~/Projects/TrailOfBits/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null
+    find ~/.config/nvim -maxdepth 0 -type d 2>/dev/null
+    echo ~/.local/share/chezmoi/
+    echo ~/.zshrc
+    echo ~/.local/bin/cadd
+    echo ~/.local/bin/cinstall
+    echo ~/.local/bin/cap
+    echo ~/.local/bin/cpush
+    echo ~/.local/bin/sesh
+    echo ~/.tmux.conf
+    echo ~/.gitconfig
+    echo ~/.config/skhd/skhdrc
+}
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    # Check if we're in tmux to use display-popup
+    if [[ -n $TMUX ]]; then
+        # Use a temp file to store the selection
+        temp_file=$(mktemp)
+        
+        # Run fzf in the popup and save selection to temp file
+        tmux display-popup -E -w 80% -h 80% -T " Quick Jump " bash -c "
+            get_items() {
+                find ~/GitDownloads/ ~/Projects/TrailOfBits/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null
+                find ~/.config/nvim -maxdepth 0 -type d 2>/dev/null
+                echo ~/.local/share/chezmoi/
+                echo ~/.zshrc
+                echo ~/.local/bin/cadd
+                echo ~/.local/bin/cinstall
+                echo ~/.local/bin/cap
+                echo ~/.local/bin/cpush
+                echo ~/.local/bin/sesh
+                echo ~/.tmux.conf
+                echo ~/.gitconfig
+                echo ~/.config/skhd/skhdrc
+            }
+            
+            get_items | fzf \
+                --height=100% \
+                --layout=reverse \
+                --border=rounded \
+                --prompt='Jump to > ' \
+                --header='ESC to cancel | Enter to jump' \
+                --preview='if [[ -d {} ]]; then ls -la {} 2>/dev/null | head -20; else head -50 {} 2>/dev/null; fi' \
+                --preview-window=right:50%:wrap \
+                --bind='esc:abort' > '$temp_file'
+        "
+        
+        # Read the selection from temp file
+        if [[ -f $temp_file ]]; then
+            selected=$(cat "$temp_file")
+            rm -f "$temp_file"
+        fi
+    else
+        # Fallback to regular fzf if not in tmux
+        selected=$(get_items | fzf \
+            --height=40% \
+            --layout=reverse \
+            --border=rounded \
+            --prompt='Jump to > ' \
+            --header='ESC to cancel | Enter to jump' \
+            --preview='if [[ -d {} ]]; then ls -la {} 2>/dev/null | head -20; else head -50 {} 2>/dev/null; fi' \
+            --preview-window=right:50%:wrap \
+            --bind='esc:abort'
+        )
+    fi
+fi
+
+# Exit if nothing selected (including ESC press)
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+# If we're in tmux, handle the jump
+if [[ -n $TMUX ]]; then
+    # If it's a file, open it in nvim in the current pane
+    if [[ -f $selected ]]; then
+        # Send C-c to cancel any running command, then open the file
+        tmux send-keys C-c
+        sleep 0.1
+        tmux send-keys "nvim \"$selected\"" Enter
+    else
+        # If it's a directory, cd to it
+        tmux send-keys C-c
+        sleep 0.1
+        tmux send-keys "cd \"$selected\" && clear" Enter
+        
+        # Optional: Auto-open nvim in directories
+        # Uncomment the next line if you want to auto-open nvim after jumping
+        # tmux send-keys "nvim ." Enter
+    fi
+else
+    # If not in tmux, just cd to the directory or open the file
+    if [[ -f $selected ]]; then
+        nvim "$selected"
+    else
+        cd "$selected" && exec $SHELL
+    fi
+fi

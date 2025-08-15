@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    # Check if we're in tmux to use display-popup
+    if [[ -n $TMUX ]]; then
+        selected=$(tmux display-popup -E -w 80% -h 80% -T "Select Project" \
+            "$(
+                (
+                    find ~/GitDownloads/ ~/Projects/TrailOfBits/ -mindepth 1 -maxdepth 1 -type d
+                    find ~/.config/nvim -maxdepth 0 -type d
+                    echo ~/.local/share/chezmoi/
+                    echo ~/.zshrc
+                    echo ~/.local/bin/cadd
+                    echo ~/.local/bin/cinstall
+                    echo ~/.local/bin/cap
+                    echo ~/.local/bin/cpush
+                    echo ~/.local/bin/sesh
+                    echo ~/.tmux.conf
+                    echo ~/.gitconfig
+                    echo ~/.config/skhd/skhdrc
+                ) | fzf \
+                    --height=100% \
+                    --layout=reverse \
+                    --border=rounded \
+                    --prompt='Select project > ' \
+                    --header='Choose a project or config file' \
+                    --preview='if [[ -d {} ]]; then ls -la {}; else head -50 {}; fi' \
+                    --preview-window=right:50%:wrap
+            )"
+        )
+    else
+        # Fallback to regular fzf if not in tmux
+        selected=$(
+            (
+                find ~/GitDownloads/ ~/Projects/TrailOfBits/ -mindepth 1 -maxdepth 1 -type d
+                find ~/.config/nvim -maxdepth 0 -type d
+                echo ~/.local/share/chezmoi/
+                echo ~/.zshrc
+                echo ~/.local/bin/cadd
+                echo ~/.local/bin/cinstall
+                echo ~/.local/bin/cap
+                echo ~/.local/bin/cpush
+                echo ~/.local/bin/sesh
+                echo ~/.tmux.conf
+                echo ~/.gitconfig
+                echo ~/.config/skhd/skhdrc
+            ) | fzf \
+                --height=40% \
+                --layout=reverse \
+                --border=rounded \
+                --prompt='Select project > ' \
+                --header='Choose a project or config file' \
+                --preview='if [[ -d {} ]]; then ls -la {}; else head -50 {}; fi' \
+                --preview-window=right:50%:wrap
+        )
+    fi
+fi
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+selected_name=$(basename "$selected" | tr . _)
+tmux_running=$(pgrep tmux)
+
+# Start tmux if it is not running
+if [[ -z $tmux_running ]]; then
+    tmux new-session -d
+    tmux_running=$(pgrep tmux)
+fi
+
+if ! tmux has-session -t=$selected_name 2>/dev/null; then
+    tmux new-session -d -s $selected_name -c $selected
+
+    if [[ -f $selected ]]; then
+        tmux send-keys -t $selected_name:0 "nvim \"$selected\"" C-m
+    else
+        tmux new-window -t $selected_name -c $selected -n "terminal_${selected_name}"
+
+        # Split the window vertically (main pane on left)
+        tmux split-window -t $selected_name:1 -h -c $selected -l 33%
+
+        # Split the right pane horizontally
+        tmux split-window -t $selected_name:1 -v -c $selected
+        
+        # Select the main (left) pane
+        tmux select-pane -t $selected_name:1.0
+
+        tmux select-window -t $selected_name:0
+        tmux send-keys -t $selected_name:1.0 'git status' C-m
+        tmux send-keys -t $selected_name:1.1 'ls' C-m
+
+        tmux send-keys -t $selected_name:0 'nvim .' C-m
+    fi
+fi
+
+# Check if we have active clients when inside tmux
+if [[ -z $TMUX ]] || [[ -z "$(tmux list-clients)" ]]; then
+    tmux attach-session -t $selected_name
+else
+    tmux switch-client -t $selected_name
+fi

@@ -12,6 +12,11 @@ map("i", "jk", "<ESC>")
 
 vim.keymap.set('n', '<leader>S', '<cmd>lua require("spectre").toggle()<CR>', { desc = "Toggle Spectre" })
 
+-- Delete without copying
+vim.keymap.set('n', 'd', '"_d', { desc = 'Delete without copying' })
+vim.keymap.set('v', 'd', '"_d', { desc = 'Delete without copying' })
+vim.keymap.set('n', 'dd', '"_dd', { desc = 'Delete line without copying' })
+
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
 map('n', 'gd', vim.lsp.buf.definition, { noremap=true, silent=true, desc="Go to definition" })
 
