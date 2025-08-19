@@ -4,9 +4,7 @@
 #
 # Add zsh gitconfig
 chezmoi add ~/.zshrc ~/.gitconfig ~/.tmux.conf
-
-# INFO: Tmux
-# chezmoi add ~/.tmux.conf
+chezmoi add ~/.lldbinit
 
 # INFO: Neovim config
 rm -rf ~/.local/share/chezmoi/dot_config/nvim/

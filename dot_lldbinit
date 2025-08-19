@@ -1,0 +1,2 @@
+script
+"llvm-project" in os.getcwd() and lldb.debugger.HandleCommand("command script import llvm/utils/lldbDataFormatters.py")
