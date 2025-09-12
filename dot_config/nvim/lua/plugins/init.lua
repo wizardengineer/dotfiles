@@ -3,27 +3,40 @@
 -- my morals are just starting to kick in
 
 return {
-  { "sitiom/nvim-numbertoggle" },
-  { 
-    "alexghergh/nvim-tmux-navigation",
-    config = function()
-
-      local nvim_tmux_nav = require('nvim-tmux-navigation')
-
-      nvim_tmux_nav.setup {
-          disable_when_zoomed = true -- defaults to false
+  {
+    'augmentcode/augment.vim',
+    lazy = false,  -- Load immediately to ensure workspace folders are set
+    init = function()
+      -- Set workspace folders before the plugin loads
+      vim.g.augment_workspace_folders = {
+        '~/Projects/TrailOfBits/clangir/',
+        '~/Projects/TrailOfBits/llvm-project/'
       }
-
-      vim.keymap.set('n', "<C-h>", nvim_tmux_nav.NvimTmuxNavigateLeft)
-      vim.keymap.set('n', "<C-j>", nvim_tmux_nav.NvimTmuxNavigateDown)
-      vim.keymap.set('n', "<C-k>", nvim_tmux_nav.NvimTmuxNavigateUp)
-      vim.keymap.set('n', "<C-l>", nvim_tmux_nav.NvimTmuxNavigateRight)
-      vim.keymap.set('n', "<C-\\>", nvim_tmux_nav.NvimTmuxNavigateLastActive)
-      vim.keymap.set('n', "<C-Space>", nvim_tmux_nav.NvimTmuxNavigateNext)
-
-    end
+    end,
   },
-
+  { 
+    "sitiom/nvim-numbertoggle",
+    lazy = false,
+  },
+  {
+    "christoomey/vim-tmux-navigator",
+    event = "VeryLazy",
+    cmd = {
+      "TmuxNavigateLeft",
+      "TmuxNavigateDown",
+      "TmuxNavigateUp",
+      "TmuxNavigateRight",
+      "TmuxNavigatePrevious",
+      "TmuxNavigatorProcessList",
+    },
+    keys = {
+      { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
+      { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
+      { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
+      { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
+      { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
+    },
+  },
   {
     "rhysd/vim-llvm",
     ft = { "llvm", "tablegen", "mir" }, -- Load only for LLVM-related filetypes
