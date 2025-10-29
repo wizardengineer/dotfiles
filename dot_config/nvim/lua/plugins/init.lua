@@ -181,6 +181,62 @@ return {
     'mfussenegger/nvim-dap',
     config = function()
 			local dap, dapui = require("dap"), require("dapui")
+
+      -- Configure CodeLLDB adapter for C/C++/LLVM projects
+      dap.adapters.codelldb = {
+        type = 'server',
+        port = "${port}",
+        executable = {
+          command = '/Users/juliusalexandre/Projects/tool/codelldb-darwin-arm64/extension/adapter/codelldb',
+          args = {"--port", "${port}"},
+        }
+      }
+
+      -- C/C++ configuration
+      dap.configurations.cpp = {
+        {
+          name = "Launch file",
+          type = "codelldb",
+          request = "launch",
+          program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/', 'file')
+          end,
+          cwd = '${workspaceFolder}',
+          stopOnEntry = false,
+        },
+        {
+          name = "Launch file (with args)",
+          type = "codelldb",
+          request = "launch",
+          program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/', 'file')
+          end,
+          args = function()
+            local args_string = vim.fn.input('Arguments: ')
+            return vim.split(args_string, " +")
+          end,
+          cwd = '${workspaceFolder}',
+          stopOnEntry = false,
+        },
+        {
+          name = "Attach to process",
+          type = "codelldb",
+          request = "attach",
+          pid = require('dap.utils').pick_process,
+          args = {},
+        },
+      }
+
+      -- Use same config for C
+      dap.configurations.c = dap.configurations.cpp
+
+      -- Load custom DAP configurations for LLVM/CMake projects
+      local ok, custom_dap = pcall(require, 'custom.dap-config')
+      if ok then
+        custom_dap.setup()
+      end
+
+      -- DAP UI listeners
       dap.listeners.before.attach.dapui_config = function()
         dapui.open()
       end
