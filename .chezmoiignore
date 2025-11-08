@@ -1,0 +1,7 @@
+# Chezmoi ignore patterns - files that should not be managed by chezmoi
+
+# Neovim secrets and API keys
+.config/nvim/lua/plugins/minuet-ai.lua
+
+# Shell secrets
+.zshrc.local
