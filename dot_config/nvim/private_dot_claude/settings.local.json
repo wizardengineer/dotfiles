@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:kilocode.ai)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:cursor.com)",
+      "Bash(cat:*)",
+      "Bash(chezmoi managed:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

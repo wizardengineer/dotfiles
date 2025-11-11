@@ -157,3 +157,8 @@ alias python='/opt/homebrew/opt/python@3.11/bin/python3.11'
 alias python3='/opt/homebrew/opt/python@3.11/bin/python3.11'
 alias pip='/opt/homebrew/opt/python@3.11/bin/pip3.11'
 alias pip3='/opt/homebrew/opt/python@3.11/bin/pip3.11'
+export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
+export PATH="$HOME/Library/Python/3.9/bin:$PATH"
+
+# Source local secrets (API keys, tokens, etc.) - not tracked in git
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local

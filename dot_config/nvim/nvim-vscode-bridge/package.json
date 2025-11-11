@@ -1,0 +1,151 @@
+{
+  "name": "nvim-vscode-bridge",
+  "displayName": "Neovim VSCode Bridge",
+  "description": "Integrate Neovim's powerful features into VSCode",
+  "version": "0.1.0",
+  "publisher": "nvim-bridge",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Extension Packs"
+  ],
+  "keywords": [
+    "neovim",
+    "nvim",
+    "fuzzy finder",
+    "lsp",
+    "git",
+    "productivity"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "nvim-bridge.findFiles",
+        "title": "Neovim: Find Files",
+        "category": "Neovim Bridge"
+      },
+      {
+        "command": "nvim-bridge.liveGrep",
+        "title": "Neovim: Live Grep",
+        "category": "Neovim Bridge"
+      },
+      {
+        "command": "nvim-bridge.findBuffers",
+        "title": "Neovim: Find Buffers",
+        "category": "Neovim Bridge"
+      },
+      {
+        "command": "nvim-bridge.lspReferences",
+        "title": "Neovim: LSP References",
+        "category": "Neovim Bridge"
+      },
+      {
+        "command": "nvim-bridge.lspDefinition",
+        "title": "Neovim: LSP Definition",
+        "category": "Neovim Bridge"
+      },
+      {
+        "command": "nvim-bridge.gitStatus",
+        "title": "Neovim: Git Status",
+        "category": "Neovim Bridge"
+      },
+      {
+        "command": "nvim-bridge.openNvimConfig",
+        "title": "Neovim: Open Config",
+        "category": "Neovim Bridge"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "nvim-bridge.findFiles",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f"
+      },
+      {
+        "command": "nvim-bridge.liveGrep",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g"
+      },
+      {
+        "command": "nvim-bridge.findBuffers",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b"
+      }
+    ],
+    "configuration": {
+      "title": "Neovim Bridge",
+      "properties": {
+        "nvim-bridge.nvimPath": {
+          "type": "string",
+          "default": "nvim",
+          "description": "Path to Neovim executable"
+        },
+        "nvim-bridge.configPath": {
+          "type": "string",
+          "default": "~/.config/nvim",
+          "description": "Path to Neovim configuration directory"
+        },
+        "nvim-bridge.enableLSPProxy": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable LSP proxy to use Neovim's language servers"
+        },
+        "nvim-bridge.enableGitIntegration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Git integration features"
+        },
+        "nvim-bridge.fuzzyFinderProvider": {
+          "type": "string",
+          "enum": ["fzf-lua", "telescope"],
+          "default": "fzf-lua",
+          "description": "Fuzzy finder provider to use"
+        }
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "nvim-bridge.gitView",
+          "name": "Neovim Git",
+          "when": "config.nvim-bridge.enableGitIntegration"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nvim-bridge",
+          "title": "Neovim Bridge",
+          "icon": "$(terminal)"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "neovim": "^4.10.1",
+    "msgpack-lite": "^0.1.26"
+  }
+}
