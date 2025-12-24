@@ -9,7 +9,10 @@
       "Bash(chezmoi managed:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(echo $ANTHROPIC_API_KEY)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

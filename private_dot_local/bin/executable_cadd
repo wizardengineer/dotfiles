@@ -6,6 +6,12 @@
 chezmoi add ~/.zshrc ~/.gitconfig ~/.tmux.conf
 chezmoi add ~/.lldbinit
 
+# INFO: CLAUDE
+chezmoi add ~/.claude/skills/ 
+chezmoi add ~/.claude/CLAUDE.md
+chezmoi add ~/.claude/settings.json
+chezmoi add ~/.claude/statusline.sh
+
 # INFO: Neovim config
 rm -rf ~/.local/share/chezmoi/dot_config/nvim/
 chezmoi add ~/.config/nvim

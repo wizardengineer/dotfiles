@@ -1,6 +1,7 @@
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 export PATH=$HOME/Projects/TrailOfBits/llvm-project/build/bin:$PATH
+export PATH="$(brew --prefix llvm)/bin:$PATH"
 
 export SDKROOT=$(xcrun --show-sdk-path)
 # Path to your Oh My Zsh installation.
