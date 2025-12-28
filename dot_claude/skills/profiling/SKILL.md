@@ -1,480 +1,371 @@
 ---
-name: profiling
-description: Profile code performance using callgrind and valgrind with nextest integration for analyzing instruction counts, cache behavior, and identifying bottlenecks
+name: performance-engineering
+description: Systems-level performance engineering for Rust, C/C++, and Python codebases. Use when profiling, debugging performance bottlenecks, analyzing CPU/memory usage, finding slow code paths, optimizing hot loops, investigating cache misses, analyzing compile times, or improving runtime performance. Triggers on queries about flamegraphs, perf, valgrind, profilers, benchmarking, or "why is this slow".
 ---
 
-# Profiling with Valgrind, Callgrind, and Nextest
+# Performance Engineering
 
-The facet project has pre-configured valgrind integration for debugging crashes, memory leaks, and performance profiling.
+Systems-level profiling and debugging for Rust, C/C++, and Python. Focus on finding what's slow, understanding why, and fixing it systematically.
 
-## Quick Usage
+## Core Philosophy
 
-```bash
-# Run test under valgrind (memory errors + leaks)
-cargo nextest run --profile valgrind -p PACKAGE TEST_FILTER
+1. **Measure before optimizing** - Never guess where bottlenecks are
+2. **Profile in release mode** - Debug builds hide real performance characteristics
+3. **Isolate variables** - Change one thing at a time, measure impact
+4. **Question the algorithm first** - O(n²) won't be saved by micro-optimizations
+5. **Cache behavior matters** - Memory access patterns often dominate CPU time
 
-# Run test under callgrind (profiling)
-valgrind --tool=callgrind --callgrind-out-file=callgrind.out \
-  cargo nextest run --no-fail-fast -p PACKAGE TEST_FILTER
+## Quick Reference: Tool Selection
 
-# Analyze callgrind output
-callgrind_annotate callgrind.out
-# or with GUI
-kcachegrind callgrind.out  # Linux
-qcachegrind callgrind.out  # macOS
-```
+| Problem | Linux | macOS | Tool |
+|---------|-------|-------|------|
+| CPU hotspots | `perf record` | `Instruments` | flamegraph |
+| Memory leaks | `valgrind --leak-check=full` | `leaks` | heaptrack |
+| Cache misses | `perf stat -e cache-misses` | `Instruments` | cachegrind |
+| Syscall overhead | `strace -c` | `dtruss` | - |
+| I/O bottlenecks | `perf trace` | `fs_usage` | - |
+| Lock contention | `perf lock` | `Instruments` | - |
+| Compile time | `-ftime-trace` (Clang) | same | ClangBuildAnalyzer |
 
-## Nextest Valgrind Profile
+## Profiling Workflow
 
-The project has a pre-configured valgrind profile in `.config/nextest.toml`:
+### Step 1: Establish Baseline
 
-### Configuration
-
-```toml
-[scripts.wrapper.valgrind]
-# Leak checking configuration
-command = 'valgrind --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=definite,indirect --error-exitcode=1'
-
-[profile.valgrind]
-# Apply to all tests on Linux
-platform = 'cfg(target_os = "linux")'
-filter = 'all()'
-run-wrapper = 'valgrind'
-```
-
-**What it does:**
-- `--leak-check=full` - Show details for each leak
-- `--show-leak-kinds=all` - Show all leak types for diagnostics
-- `--errors-for-leak-kinds=definite,indirect` - Only fail on real leaks (not "still reachable")
-- `--error-exitcode=1` - Exit with code 1 if errors found
-
-### Usage
+Before any investigation, capture reproducible baseline metrics:
 
 ```bash
-# Run specific test
-cargo nextest run --profile valgrind -p facet-format-json test_simple_struct
+# Create benchmark script that exercises the slow path
+# Run 3-5 times, record median
 
-# Run all tests in a file
-cargo nextest run --profile valgrind -p facet-format-json --test jit_deserialize
+# Rust
+hyperfine --warmup 3 'cargo run --release -- <args>'
 
-# Run with filter
-cargo nextest run --profile valgrind -p facet-json booleans
+# C/C++
+hyperfine --warmup 3 './build/release/program <args>'
+
+# Python
+hyperfine --warmup 3 'python script.py <args>'
 ```
 
-**Benefits:**
-- ✅ Automatic configuration - no manual valgrind commands
-- ✅ Consistent flags across team
-- ✅ Integrated with nextest filtering
-- ✅ Clean, formatted output
+Record: wall time, peak memory (via `/usr/bin/time -v`), and relevant counters.
 
-## Profiling with Callgrind
+### Step 2: CPU Profiling
 
-Callgrind is a valgrind tool for profiling instruction counts and function call graphs.
-
-### Basic Profiling
+#### Linux (perf + flamegraph)
 
 ```bash
-# Profile a specific test
-valgrind --tool=callgrind \
-  --callgrind-out-file=callgrind.out \
-  cargo nextest run --no-fail-fast -p PACKAGE TEST_NAME
+# Record profile (Rust/C/C++)
+perf record -g --call-graph dwarf ./target/release/program
 
-# Analyze output
-callgrind_annotate callgrind.out
+# Generate flamegraph
+perf script | stackcollapse-perf.pl | flamegraph.pl > flame.svg
+
+# Quick interactive analysis
+perf report
 ```
 
-### Advanced Options
+#### macOS (Instruments or samply)
 
 ```bash
-# Collect cache simulation data (slower but more detailed)
-valgrind --tool=callgrind \
-  --cache-sim=yes \
-  --branch-sim=yes \
-  --callgrind-out-file=callgrind.out \
-  cargo nextest run --no-fail-fast -p PACKAGE TEST_NAME
+# samply (recommended for Rust/C++)
+samply record ./target/release/program
+# Opens Firefox Profiler automatically
 
-# Focus on specific function
-valgrind --tool=callgrind \
-  --toggle-collect=main \
-  --callgrind-out-file=callgrind.out \
-  cargo nextest run --no-fail-fast -p PACKAGE TEST_NAME
-
-# Compress output (can get large)
-valgrind --tool=callgrind \
-  --compress-strings=yes \
-  --compress-pos=yes \
-  --callgrind-out-file=callgrind.out.gz \
-  cargo nextest run --no-fail-fast -p PACKAGE TEST_NAME
+# Instruments CLI
+xcrun xctrace record --template 'Time Profiler' --launch ./program
 ```
 
-### Analyzing Callgrind Output
-
-#### Command Line (callgrind_annotate)
+#### Rust-Specific CPU Profiling
 
 ```bash
-# Full report
-callgrind_annotate callgrind.out
+# cargo-flamegraph (simplest)
+cargo flamegraph -- <args>
 
-# Focus on specific functions
-callgrind_annotate --include='facet::' callgrind.out
+# With debug symbols in release
+# Add to Cargo.toml:
+# [profile.release]
+# debug = true
 
-# Show only top functions
-callgrind_annotate --auto=yes --threshold=1 callgrind.out
-
-# Compare two runs
-callgrind_annotate --diff callgrind.old.out callgrind.new.out
+# For async code, use tokio-console
+RUSTFLAGS="--cfg tokio_unstable" cargo build
+tokio-console
 ```
 
-**Reading the output:**
-```
-Ir                                     # Instruction reads (total)
-I1mr                                   # L1 instruction cache misses
-ILmr                                   # Last-level instruction cache misses
-Dr                                     # Data reads
-Dw                                     # Data writes
-D1mr, D1mw                            # L1 data cache read/write misses
-DLmr, DLmw                            # Last-level data cache read/write misses
+#### C/C++ with gprof
 
---------------------------------------------------------------------------------
-Ir               file:function
---------------------------------------------------------------------------------
-1,234,567 (45%)  facet_format_json::deserialize
-  987,654 (35%)  facet_format::parse_value
-  ...
-```
-
-#### GUI (KCachegrind/QCachegrind)
-
-Install:
 ```bash
-# Linux
-sudo apt install kcachegrind
+# Compile with profiling
+gcc -pg -O2 -g program.c -o program
+./program
+gprof program gmon.out > analysis.txt
+```
+
+#### Python Profiling
+
+```bash
+# cProfile (built-in)
+python -m cProfile -s cumtime script.py > profile.txt
+
+# py-spy (sampling profiler, no code changes)
+py-spy record -o profile.svg -- python script.py
+
+# line_profiler (line-by-line)
+# Add @profile decorator to functions
+kernprof -l -v script.py
+
+# memory_profiler
+python -m memory_profiler script.py
+```
+
+### Step 3: Memory Profiling
+
+#### Heap Allocation Analysis
+
+```bash
+# Linux - heaptrack (recommended)
+heaptrack ./program
+heaptrack_gui heaptrack.program.*.gz
+
+# Linux - valgrind massif
+valgrind --tool=massif ./program
+ms_print massif.out.*
 
 # macOS
-brew install qcachegrind
-
-# Windows (WSL)
-sudo apt install kcachegrind
+leaks --atExit -- ./program
 ```
 
-Launch:
-```bash
-kcachegrind callgrind.out   # Linux
-qcachegrind callgrind.out   # macOS
-```
-
-**GUI features:**
-- Call graph visualization
-- Flamegraph-like views
-- Source code annotation (if debug symbols available)
-- Caller/callee relationships
-- Multiple metrics (instructions, cache misses, branches)
-
-## Profiling Benchmarks
-
-The generated benchmark tests (from `benchmarks.kdl`) can be profiled:
-
-### 1. As Tests (Recommended for Callgrind)
+#### Rust Memory
 
 ```bash
-# Profile a benchmark test under callgrind
-valgrind --tool=callgrind \
-  --callgrind-out-file=callgrind_simple_struct.out \
-  cargo nextest run --profile valgrind -p facet-json test_simple_struct
+# DHAT (requires nightly for best results)
+cargo install dhat
+# Add to code: #[global_allocator] static ALLOC: dhat::Alloc = dhat::Alloc;
 
-# Analyze
-callgrind_annotate callgrind_simple_struct.out
+# Tracking allocations
+RUST_LOG=trace cargo run 2>&1 | grep -i alloc
 ```
 
-**Why use tests:**
-- Single iteration = cleaner callgrind output
-- No benchmark harness overhead
-- Easier to focus on hot path
-- Faster to run
-
-### 2. As Benchmarks (For Realistic Instruction Counts)
-
-The benchmark harness (gungraun) already uses valgrind internally:
+### Step 4: Cache & Memory Access Analysis
 
 ```bash
-# Run gungraun benchmark (uses callgrind automatically)
-cargo bench --bench unified_benchmarks_gungraun --features jit simple_struct
+# Cache miss statistics
+perf stat -e cache-references,cache-misses,L1-dcache-load-misses ./program
 
-# Check output in bench-reports/gungraun-*.txt
+# Detailed cache simulation
+valgrind --tool=cachegrind ./program
+cg_annotate cachegrind.out.*
+
+# Memory bandwidth
+perf stat -e LLC-loads,LLC-load-misses,LLC-stores ./program
 ```
 
-**gungraun automatically collects:**
-- Instructions executed
-- Estimated cycles
-- L1/LL cache hits
-- RAM hits
-- Total read/write operations
+### Step 5: Identifying Specific Bottlenecks
 
-This data appears in `bench-reports/perf/RESULTS.md`.
-
-## Common Profiling Workflows
-
-### Debug a Crash
+#### Finding Hot Functions
 
 ```bash
-# 1. Run under valgrind to find memory error
-cargo nextest run --profile valgrind -p PACKAGE TEST_NAME
+# Top CPU consumers
+perf report --sort=comm,dso,symbol --stdio | head -50
 
-# 2. Read valgrind output for exact error location
-# Example: "Invalid read of size 8 at 0x123456"
-
-# 3. Fix the bug
-
-# 4. Verify fix
-cargo nextest run -p PACKAGE TEST_NAME
+# Annotate specific function with source
+perf annotate <function_name>
 ```
 
-### Find Performance Bottleneck
+#### Finding Slow System Calls
 
 ```bash
-# 1. Profile with callgrind
-valgrind --tool=callgrind \
-  --callgrind-out-file=profile.out \
-  cargo nextest run --no-fail-fast -p facet-json test_booleans
+# Linux
+strace -c ./program                    # Summary
+strace -T ./program 2>&1 | sort -k1 -r # By duration
 
-# 2. Analyze
-callgrind_annotate --auto=yes profile.out | head -30
-
-# 3. Identify hot functions (high instruction counts)
-
-# 4. Optimize hot functions
-
-# 5. Re-profile and compare
-valgrind --tool=callgrind \
-  --callgrind-out-file=profile_after.out \
-  cargo nextest run --no-fail-fast -p facet-json test_booleans
-
-callgrind_annotate --diff profile.out profile_after.out
+# macOS
+sudo dtruss ./program 2>&1 | head -100
 ```
 
-### Optimize Tier-2 JIT
+#### Lock Contention (C/C++/Rust)
 
 ```bash
-# 1. Check RESULTS.md for slow benchmarks
-grep "⚠" bench-reports/perf/RESULTS.md
+# Linux
+perf lock record ./program
+perf lock report
 
-# 2. Profile the slow benchmark test
-valgrind --tool=callgrind \
-  --callgrind-out-file=jit_profile.out \
-  cargo nextest run --profile valgrind -p facet-json test_long_strings --features jit
-
-# 3. Analyze with GUI for visual call graph
-kcachegrind jit_profile.out
-
-# 4. Look for:
-#    - Helper function calls in tight loops
-#    - Redundant alignment checks
-#    - Allocation hot spots
-
-# 5. Optimize based on findings
-
-# 6. Verify with benchmarks
-cargo xtask bench long_strings
+# Mutex contention in Rust
+# Use parking_lot with deadlock_detection feature
 ```
 
-### Compare Before/After Optimization
+## Language-Specific Techniques
 
+### Rust Performance
+
+**Compile-time optimization:**
+```toml
+# Cargo.toml
+[profile.release]
+lto = "fat"           # Link-time optimization
+codegen-units = 1     # Better optimization, slower compile
+panic = "abort"       # Smaller binary
+```
+
+**Runtime investigation:**
 ```bash
-# Before
-git checkout main
-valgrind --tool=callgrind --callgrind-out-file=before.out \
-  cargo nextest run --no-fail-fast -p facet-json test_target
+# Check for unexpected dynamic dispatch
+cargo asm <crate>::<function>
 
-# After
-git checkout my-optimization-branch
-valgrind --tool=callgrind --callgrind-out-file=after.out \
-  cargo nextest run --no-fail-fast -p facet-json test_target
+# Bounds check elimination verification
+RUSTFLAGS="-C target-cpu=native" cargo build --release
 
-# Compare
-callgrind_annotate --diff before.out after.out
+# Compile time analysis
+cargo build --timings
 ```
 
-## Interpreting Valgrind Output
+**Common Rust bottlenecks:**
+- Unnecessary `.clone()` in hot paths
+- `Vec` reallocations (use `with_capacity`)
+- String formatting in loops (use `write!` to buffer)
+- Iterator vs loop (usually equivalent, but verify)
+- `Rc`/`Arc` overhead (consider arena allocation)
 
-### Memory Error Example
+### C/C++ Performance
 
-```
-==12345== Invalid read of size 8
-==12345==    at 0x123456: facet_format_json::parse_number (parse.rs:42)
-==12345==    by 0x234567: facet_format_json::deserialize (lib.rs:123)
-==12345==  Address 0x789abc is 0 bytes after a block of size 16 alloc'd
-==12345==    at 0x345678: alloc (alloc.rs:88)
-==12345==    by 0x456789: Vec::push (vec.rs:1234)
-```
-
-**Translation:**
-- Reading 8 bytes from invalid address
-- Happened in `parse_number` at line 42
-- Address is just past end of 16-byte allocation
-- **Fix:** Check bounds before reading, or fix off-by-one error
-
-### Leak Example
-
-```
-==12345== 128 bytes in 1 blocks are definitely lost in loss record 1 of 10
-==12345==    at 0x123456: malloc (vg_replace_malloc.c:299)
-==12345==    by 0x234567: alloc (alloc.rs:88)
-==12345==    by 0x345678: Box::new (boxed.rs:123)
-==12345==    by 0x456789: setup_jit (jit.rs:456)
-```
-
-**Translation:**
-- 128 bytes allocated but never freed
-- Allocated in `setup_jit` function
-- **Fix:** Ensure cleanup/Drop implementation
-
-### Cachegrind Output Example
-
-```
-Ir               I1mr  ILmr  Dr        D1mr   DLmr   Dw        D1mw   DLmw
---------------------------------------------------------------------------------
-1,234,567        123   45    456,789   234    12     123,456   67     8   facet::deserialize
-  987,654        98    32    345,678   189    9      98,765    43     5   - facet::parse_value
-  234,567        23    10    98,765    45     2      23,456    12     1   - facet::parse_string
-```
-
-**Key metrics:**
-- `Ir` - Instructions executed (most important for optimization)
-- `D1mr/D1mw` - L1 data cache misses (indicates poor locality)
-- `DLmr/DLmw` - Last-level cache misses (very expensive)
-
-**Optimization targets:**
-1. High `Ir` count = time-consuming function
-2. High `D1mr` = poor data locality, consider restructuring
-3. High `DLmr` = main memory accesses, critical to optimize
-
-## Profiling Flags
-
-### Valgrind (Memory Debugging)
-
+**Compiler optimization flags:**
 ```bash
---leak-check=full          # Detailed leak info
---show-leak-kinds=all      # Show all leak types
---track-origins=yes        # Track uninitialized values (slower)
---verbose                  # More diagnostic info
---log-file=valgrind.log    # Save output to file
+# GCC/Clang release build
+-O3 -march=native -flto -ffast-math  # Aggressive
+-O2 -march=native                     # Safe default
+
+# Profile-guided optimization
+gcc -fprofile-generate -O2 program.c -o program
+./program <typical_workload>
+gcc -fprofile-use -O2 program.c -o program_optimized
 ```
 
-### Callgrind (Profiling)
+**Common C/C++ bottlenecks:**
+- Cache-unfriendly data structures (AoS vs SoA)
+- Unnecessary copies (missing move semantics)
+- Virtual function overhead in hot paths
+- False sharing in multithreaded code
+- Unaligned memory access
 
+**Analyzing generated assembly:**
 ```bash
---callgrind-out-file=FILE  # Output file (default: callgrind.out.<pid>)
---cache-sim=yes            # Simulate cache behavior
---branch-sim=yes           # Simulate branch prediction
---collect-jumps=yes        # Collect jump information
---dump-instr=yes           # Dump instruction info
---compress-strings=yes     # Compress output (smaller files)
+# Compiler Explorer locally
+objdump -d -S -C ./program | less
+
+# Specific function
+objdump -d ./program | awk '/<function_name>:/,/^$/'
+
+# With source interleaving
+gcc -g -O2 -fverbose-asm -S -o program.s program.c
 ```
 
-### Cargo Nextest
+### Python Performance
 
+**Finding slow code:**
 ```bash
---no-fail-fast            # Continue running after first failure
---profile valgrind        # Use valgrind profile from nextest.toml
---test-threads=1          # Run single-threaded (better for profiling)
+# Deterministic profiling
+python -m cProfile -s tottime script.py 2>&1 | head -30
+
+# Sampling (lower overhead)
+py-spy top --pid <PID>
 ```
 
-## Tips and Tricks
+**Common Python bottlenecks:**
+- Loops that should be NumPy vectorized
+- Repeated attribute lookups in loops
+- Creating objects in hot paths
+- Global variable access (slower than local)
+- String concatenation (use `''.join()`)
 
-### Speed Up Profiling
-
-1. **Profile in release mode** (but keep debug symbols):
-   ```bash
-   # Add to Cargo.toml
-   [profile.release]
-   debug = true
-   ```
-
-2. **Use `--no-fail-fast` to avoid stopping early**
-
-3. **Filter to specific tests** - don't profile everything at once
-
-4. **Disable address randomization** for reproducible runs:
-   ```bash
-   setarch $(uname -m) -R valgrind --tool=callgrind ...
-   ```
-
-### Read Callgrind Data Programmatically
-
+**Solutions:**
 ```python
-# Example: Parse callgrind output for automation
-def parse_callgrind(filename):
-    import re
-    costs = {}
-    with open(filename) as f:
-        for line in f:
-            if m := re.match(r'(\d+)\s+(.+)', line):
-                cost, func = m.groups()
-                costs[func] = int(cost)
-    return costs
-
-# Compare two profiles
-before = parse_callgrind('before.out')
-after = parse_callgrind('after.out')
-
-for func in before:
-    if func in after:
-        delta = after[func] - before[func]
-        percent = (delta / before[func]) * 100
-        if abs(percent) > 5:  # More than 5% change
-            print(f"{func}: {percent:+.1f}% ({delta:+,} instructions)")
+# Move to C extensions for hot paths
+# Use Cython for gradual optimization
+# Consider PyPy for CPU-bound pure Python
+# NumPy/Pandas for numerical work
 ```
 
-## Don't Do This
+## Compile Time Analysis
 
-❌ Run valgrind without nextest profile - inconsistent flags
-❌ Profile debug builds - too slow and unrepresentative
-❌ Ignore "still reachable" leaks in FFI code - sometimes OK
-❌ Profile with multiple test threads - non-deterministic results
-❌ Forget to clean between profiling runs - stale data
+### Rust Compile Times
 
-## Do This Instead
+```bash
+# Build timing breakdown
+cargo build --timings
 
-✅ Use `--profile valgrind` for memory debugging
-✅ Use callgrind for performance profiling
-✅ Profile release builds with debug symbols
-✅ Focus on hot paths (high `Ir` counts)
-✅ Compare before/after with `--diff`
-✅ Use GUI tools (kcachegrind) for complex call graphs
+# Self-profiling (detailed)
+RUSTFLAGS="-Z self-profile" cargo +nightly build --release
+# Analyze with crox or summarize
 
-## Files and Locations
-
-```
-.config/nextest.toml         # Valgrind profile configuration
-callgrind.out.*              # Callgrind output files (gitignored)
-bench-reports/gungraun-*.txt # Gungraun output (includes instruction counts)
+# Find expensive derives/macros
+cargo llvm-lines | head -30
 ```
 
-## Troubleshooting
+### C/C++ Compile Times
 
-### Valgrind complains about "unrecognized instruction"
-- Update valgrind: `sudo apt update && sudo apt install valgrind`
-- Or use `--vex-iropt-register-updates=allregs-at-mem-access`
+```bash
+# Clang time trace
+clang++ -ftime-trace -c file.cpp
+# Opens chrome://tracing or use ClangBuildAnalyzer
 
-### Callgrind output is huge
-- Use `--compress-strings=yes --compress-pos=yes`
-- Or filter to specific functions with `--toggle-collect=function_name`
+# Include analysis
+include-what-you-use file.cpp
 
-### Profile doesn't match benchmark results
-- Ensure you're profiling the same code path
-- Check if JIT compilation is cached (use setup functions in gungraun)
-- Profile release build, not debug
+# Precompiled headers impact
+time clang++ -x c++-header header.h -o header.pch
+```
 
-### Can't open callgrind file in GUI
-- Check file permissions
-- Ensure file isn't corrupted (run `callgrind_annotate` first)
-- Try different viewer (kcachegrind vs qcachegrind)
+## Debugging Performance Regressions
 
-## See Also
+### Git Bisect for Performance
 
-- Valgrind manual: https://valgrind.org/docs/manual/manual.html
-- Callgrind manual: https://valgrind.org/docs/manual/cl-manual.html
-- Nextest wrapper scripts: https://nexte.st/docs/configuration/wrapper-scripts/
-- KCachegrind handbook: https://docs.kde.org/stable5/en/kcachegrind/
-- Project nextest config: `.config/nextest.toml`
-- Benchmark debugging: See `benchmarking.md`
+```bash
+# Create benchmark script
+cat > bench.sh << 'EOF'
+#!/bin/bash
+cargo build --release 2>/dev/null || exit 125
+result=$(hyperfine --warmup 1 --runs 3 './target/release/prog' --export-json /tmp/bench.json 2>/dev/null)
+median=$(jq '.results[0].median' /tmp/bench.json)
+threshold=1.5  # seconds
+(( $(echo "$median > $threshold" | bc -l) )) && exit 1 || exit 0
+EOF
+chmod +x bench.sh
+
+git bisect start
+git bisect bad HEAD
+git bisect good v1.0.0
+git bisect run ./bench.sh
+```
+
+### A/B Comparison
+
+```bash
+# Compare two commits
+git stash
+hyperfine --warmup 3 './target/release/prog' --export-json baseline.json
+
+git checkout <other-commit>
+cargo build --release
+hyperfine --warmup 3 './target/release/prog' --export-json comparison.json
+
+# Statistical comparison
+hyperfine --warmup 3 \
+  -n baseline './baseline_binary' \
+  -n candidate './candidate_binary'
+```
+
+## Reference Files
+
+For detailed tool-specific guides, see:
+- `references/flamegraph-guide.md` - Interpreting flamegraphs and common patterns
+- `references/perf-events.md` - Hardware performance counters and their meanings
+- `references/optimization-patterns.md` - Common optimizations by language
+
+## Checklist: Before Claiming "Optimized"
+
+1. [ ] Baseline measurement recorded with variance
+2. [ ] Profiled in release/optimized mode
+3. [ ] Identified actual bottleneck (not assumed)
+4. [ ] Optimization targets the bottleneck
+5. [ ] Post-optimization measurement shows improvement
+6. [ ] No correctness regressions (tests pass)
+7. [ ] Improvement documented with numbers
