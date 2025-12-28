@@ -163,8 +163,8 @@ return {
               ueberzug_scaler = "cover",
               -- render_markdown.nvim integration, enabled by default for markdown
               render_markdown = { enabled = true, filetypes = { ["markdown"] = true } },
-              -- snacks.images integration, enabled by default
-              snacks_image    = { enabled = true, render_inline = true },
+              -- snacks.images integration, disabled (causes freeze with opencode.nvim)
+              snacks_image    = { enabled = false },
             },
             -- Code Action previewers, default is "codeaction" (set via `lsp.code_actions.previewer`)
             -- "codeaction_native" uses fzf's native previewer, recommended when combined with git-delta

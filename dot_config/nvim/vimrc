@@ -26,9 +26,9 @@ if v:version >= 702
   " Whitespace at the end of a line. This little dance suppresses
   " whitespace that has just been typed.
   au BufWinEnter * let w:m1=matchadd('WhitespaceEOL', '\s\+$', -1)
-  au InsertEnter * call matchdelete(w:m1)
+  au InsertEnter * if exists('w:m1') | silent! call matchdelete(w:m1) | endif
   au InsertEnter * let w:m2=matchadd('WhitespaceEOL', '\s\+\%#\@<!$', -1)
-  au InsertLeave * call matchdelete(w:m2)
+  au InsertLeave * if exists('w:m2') | silent! call matchdelete(w:m2) | endif
   au InsertLeave * let w:m1=matchadd('WhitespaceEOL', '\s\+$', -1)
 else
   au BufRead,BufNewFile * syntax match LongLine /\%>80v.\+/
