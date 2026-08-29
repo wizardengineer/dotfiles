@@ -1,4 +1,8 @@
-local configs = require 'configs'
+-- `require 'configs'` here required lua/configs/init.lua (the options loader,
+-- which returns nil) instead of lua/meta_configs.lua. Indexing that nil threw,
+-- the pcall in lua/lsp/init.lua swallowed it, and clangd silently fell back to
+-- the nvim-lspconfig defaults -- none of the settings below were in effect.
+local configs = require 'meta_configs'
 ---@brief
 ---
 --- https://clangd.llvm.org/installation.html
@@ -20,7 +24,7 @@ local function switch_source_header(bufnr)
         return vim.notify(('method %s is not supported by any servers active on the current buffer'):format(method_name))
     end
     local params = vim.lsp.util.make_text_document_params(bufnr)
-    client.request(method_name, params, function(err, result)
+    client:request(method_name, params, function(err, result)
         if err then
             error(tostring(err))
         end
@@ -35,12 +39,12 @@ end
 local function symbol_info()
     local bufnr = vim.api.nvim_get_current_buf()
     local clangd_client = vim.lsp.get_clients({ bufnr = bufnr, name = 'clangd' })[1]
-    if not clangd_client or not clangd_client.supports_method 'textDocument/symbolInfo' then
+    if not clangd_client or not clangd_client:supports_method('textDocument/symbolInfo') then
         return vim.notify('Clangd client not found', vim.log.levels.ERROR)
     end
     local win = vim.api.nvim_get_current_win()
     local params = vim.lsp.util.make_position_params(win, clangd_client.offset_encoding)
-    clangd_client.request('textDocument/symbolInfo', params, function(err, res)
+    clangd_client:request('textDocument/symbolInfo', params, function(err, res)
         if err or #res == 0 then
             -- Clangd always returns an error, there is not reason to parse it
             return
@@ -63,9 +67,10 @@ end
 
 return {
     cmd = {
-      configs.prebuilt_llvm_bin .. '/clangd',
-        '--j=6', '--clang-tidy', '--background-index', '--pch-storage=memory'},
-    filetypes = { '.', 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
+        configs.llvm_tool('clangd'),
+        '-j=6', '--clang-tidy', '--background-index', '--pch-storage=memory',
+    },
+    filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
     root_markers = {
         '.clangd',
         '.clang-tidy',

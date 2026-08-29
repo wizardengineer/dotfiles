@@ -1,0 +1,15 @@
+{
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "xhigh",
+  "theme": "light",
+  "lastChangelogVersion": "0.80.6",
+  "steeringMode": "one-at-a-time",
+  "packages": [
+    "git:github.com/dbachelder/pi-btw",
+    "npm:pi-subagents",
+    "npm:pi-ask-user",
+    "npm:pi-claude-auth",
+    "git:github.com/ldelossa/pi-ide"
+  ]
+}

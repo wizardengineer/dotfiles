@@ -1,9 +1,9 @@
 return {
   {
     "badumbatish/brt.nvim",
-    -- -- Uncomment these two lines to contribute and develop
-    -- dir = "~/Developer/nvim_proj/brt.nvim",
-    -- dev = { true },
+    -- Use local dev version with fixes for glob, leader key, and SSH
+    -- dir = "~/GitDownloads/brt.nvim",
+    -- dev = true,
     dependencies = {
       "ibhagwan/fzf-lua", -- add fzf-lua as a dependency
       "kkharji/sqlite.lua"

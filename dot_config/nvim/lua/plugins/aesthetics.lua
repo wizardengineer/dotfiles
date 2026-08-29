@@ -202,5 +202,34 @@ return {
 
   {
     "HiPhish/rainbow-delimiters.nvim",
+    init = function()
+      local rainbow_delimiters = vim.g.rainbow_delimiters or {}
+      local blacklist = rainbow_delimiters.blacklist or {}
+
+      for _, ft in ipairs({ "oil", "fzf" }) do
+        if not vim.tbl_contains(blacklist, ft) then
+          table.insert(blacklist, ft)
+        end
+      end
+
+      local previous_condition = rainbow_delimiters.condition
+      rainbow_delimiters.blacklist = blacklist
+      rainbow_delimiters.condition = function(bufnr)
+        if type(previous_condition) == "function" and not previous_condition(bufnr) then
+          return false
+        end
+
+        local ft = vim.bo[bufnr].filetype
+        local lang = vim.treesitter.language.get_lang(ft)
+        if not lang then
+          return false
+        end
+
+        local ok, parser = pcall(vim.treesitter.get_parser, bufnr, lang)
+        return ok and parser ~= nil
+      end
+
+      vim.g.rainbow_delimiters = rainbow_delimiters
+    end,
   }
 }

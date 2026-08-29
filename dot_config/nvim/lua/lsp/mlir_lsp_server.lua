@@ -9,7 +9,7 @@ local meta_configs = require 'meta_configs'
 
 ---@type vim.lsp.Config
 return {
-  cmd = { meta_configs.llvm_bin .. '/mlir-lsp-server' },
+  cmd = { meta_configs.llvm_tool('mlir-lsp-server') },
   filetypes = { 'mlir' },
   root_markers = { '.git' },
 }

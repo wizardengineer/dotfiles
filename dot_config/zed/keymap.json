@@ -1,0 +1,267 @@
+// Zed keymap — ported from ~/.config/nvim
+//
+// Generated from research/nvim-config-inventory.md section 4a.
+// Leader is Space, so <leader>ff is written "space f f".
+//
+// BLOCK A = DIRECT 1:1 equivalents.
+// BLOCK B = APPROXIMATE; behavior differs from nvim. Delete Block B wholesale
+//           to remove every lossy binding at once.
+//
+// Not ported on purpose: `zz` -> :qa!  (see IMPOSSIBLE.md).
+// ZED-NATIVE rows (surround, af/if/ac/ic, gd, completion keys, indent-keeps-
+// selection) are omitted because Zed already provides them.
+[
+  // =====================================================================
+  // BLOCK A — DIRECT: 1:1 equivalents from ~/.config/nvim
+  // =====================================================================
+
+  // --- A / insert mode -------------------------------------------------
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      // row 12: i jk -> <Esc>
+      "j k": "vim::NormalBefore"
+    }
+  },
+
+  // --- A / visual mode -------------------------------------------------
+  {
+    "context": "Editor && vim_mode == visual",
+    "bindings": {
+      // row 3: v <BS> -> outdent alias
+      "backspace": "vim::Outdent",
+      // row 4: v <Tab> -> indent alias
+      "tab": "vim::Indent",
+      // row 22: v <leader>/ -> toggle comment on selection
+      "space /": "editor::ToggleComments",
+      // row 56: v <leader>hs -> stage selected range
+      "space h s": "git::ToggleStaged",
+      // row 57: v <leader>hr -> reset selected range
+      "space h r": "git::Restore"
+    }
+  },
+
+  // --- A / normal mode -------------------------------------------------
+  {
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      // rows 7/8/9: all three of <leader>s, <leader>q, <leader>S run :w
+      "space s": "workspace::Save",
+      // <leader>q SAVES. It does NOT quit. This is intentional in the nvim
+      // config and is preserved here verbatim.
+      "space q": "workspace::Save",
+      "space shift-s": "workspace::Save",
+
+      // row 21: n <leader>/ -> toggle comment on line
+      "space /": "editor::ToggleComments",
+
+      // row 25: n <leader>yf -> copy absolute path
+      "space y f": "editor::CopyPath",
+      // row 26: n <leader>yr -> copy relative path
+      "space y r": "editor::CopyRelativePath",
+      // row 27: n <leader>yl -> copy path:line
+      "space y l": "editor::CopyFileLocation",
+      // row 28: n <leader>yg -> yank whole buffer, restore cursor
+      // NOTE: SendKeystrokes splits on spaces, so the backtick and `z` MUST be
+      // separate tokens. "`z" as one token parses to a key no keyboard emits,
+      // which silently skips the cursor-restore half of the mapping.
+      "space y g": ["workspace::SendKeystrokes", "m z g g V G y ` z"],
+      // row 29: n <leader>ya -> duplicate of <leader>yg
+      "space y a": ["workspace::SendKeystrokes", "m z g g V G y ` z"],
+
+      // row 30: n <leader>va -> select whole file (ggVG)
+      // DRIFT: nvim's ggVG ends in visual-line mode; SelectAll does not enter
+      // a vim visual mode, so follow-up operators behave differently.
+      "space v a": "editor::SelectAll",
+
+      // row 34: n <leader>lr -> LSP rename symbol
+      "space l r": "editor::Rename",
+      // row 51: n <leader>la -> code action
+      "space l a": "editor::ToggleCodeActions",
+      // row 48: n <leader>gr -> LSP references
+      "space g r": "editor::FindAllReferences",
+
+      // row 36: n <leader>ff -> file picker
+      "space f f": "file_finder::Toggle",
+      // row 37: n <leader>fg -> project grep
+      "space f g": "pane::DeploySearch",
+      // row 50: n <leader>fs -> symbols in buffer
+      // DRIFT: nvim used an fzf treesitter picker; outline::Toggle is Zed's
+      // own outline panel with different filtering.
+      "space f s": "outline::Toggle",
+
+      // row 54: n <leader>hs -> stage hunk
+      "space h s": "git::ToggleStaged",
+      // row 55: n <leader>hr -> reset hunk
+      "space h r": "git::Restore"
+    }
+  },
+
+  // --- A / pane navigation ---------------------------------------------
+  // rows 88-91 (oil buffer window nav) and rows 94-97 (vim-tmux-navigator)
+  // are the SAME four keys. Emitted once here.
+  // CAVEAT: in nvim these hop across the nvim<->tmux boundary via
+  // vim-tmux-navigator. Inside Zed they move between Zed panes only; the
+  // tmux boundary hop is gone and cannot be recovered.
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-j": "workspace::ActivatePaneDown",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-l": "workspace::ActivatePaneRight"
+    }
+  },
+
+  // --- A / folder view toggle ------------------------------------------
+  // NOT from the nvim config — added on request. cmd-b was already taken.
+  //
+  // Two different things, deliberately on two different keys:
+  //   space b -> open/close the left dock (the folder view itself)
+  //   space o -> focus into the panel without closing it (Block B, row 23)
+  //
+  // Scoped to VimControl (normal/visual/operator-pending) rather than
+  // Workspace: `space` is a literal character in insert mode and in the
+  // terminal, so a workspace-wide binding would hijack the space bar.
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "space b": "workspace::ToggleLeftDock"
+    }
+  },
+  // Same key from inside the panel, so whatever opened it also closes it.
+  // `not_editing` matters: renaming a file in the panel is a text input, and
+  // without it a bare `space` would toggle the dock mid-rename.
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "space b": "workspace::ToggleLeftDock"
+    }
+  },
+
+  // =====================================================================
+  // BLOCK B — APPROXIMATE: behavior differs from nvim
+  //           delete this block to remove
+  // =====================================================================
+
+  // --- B / insert mode -------------------------------------------------
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      // row 74: i <C-l> accept full FIM suggestion.
+      // nvim: llama.vim local llama.cpp FIM; Zed: whichever edit-prediction
+      // provider is configured in settings.json. Different backend, and
+      // <C-F> (trigger FIM) and <C-j> (accept one line) have no equivalent.
+      "ctrl-l": "editor::AcceptEditPrediction",
+      // row 76: i <C-t> accept one word.
+      // nvim: exact word granularity; Zed: "partial" accept is approximately
+      // a word but the boundary rule is the provider's, not llama.vim's.
+      "ctrl-t": "editor::AcceptPartialEditPrediction"
+    }
+  },
+
+  // --- B / visual mode -------------------------------------------------
+  {
+    "context": "Editor && vim_mode == visual",
+    "bindings": {
+      // row 49: x <leader>g -> fzf-lua grep_visual.
+      // nvim: selection is piped straight into a live rg picker;
+      // Zed: opens project search, seeding is UI-dependent, not guaranteed.
+      "space g": "pane::DeploySearch",
+      // row 59: x <leader>as -> send selection to Claude via claudecode.nvim.
+      // nvim: WebSocket IDE protocol to an external Claude Code session;
+      // Zed: quotes the selection into Zed's own built-in agent panel.
+      "space a s": "agent::QuoteSelection"
+      // rows 60/61/62 (<leader>ab add buffer, <leader>aa accept diff,
+      // <leader>ad deny diff) are NOT bound: Zed's agent has its own
+      // accept/deny surface and exposes no stable action names for them.
+    }
+  },
+
+  // --- B / normal mode -------------------------------------------------
+  {
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      // row 5: n <S-l> -> :tabnext.
+      // nvim: tabpages are whole window layouts; Zed: tabs are buffers in a
+      // pane, so this cycles buffers, not layouts. Also loses built-in L
+      // (move cursor to bottom of screen).
+      "shift-l": "pane::ActivateNextItem",
+      // row 6: n <S-h> -> :tabprevious. Same caveat; loses built-in H.
+      "shift-h": "pane::ActivatePreviousItem",
+
+      // row 11: n <leader>n -> :Navbuddy.
+      // nvim: hierarchical drill-down symbol navigator with its own window;
+      // Zed: flat fuzzy outline list, no drill-down.
+      "space n": "outline::Toggle",
+
+      // row 16: n cp -> search("(") then lcw.
+      // nvim: search() scans FORWARD ACROSS LINES to the next "(";
+      // Zed: f( is SAME-LINE ONLY, so this silently does nothing when the
+      // next paren is on a later line. This is the main drift in Block B.
+      "c p": ["workspace::SendKeystrokes", "f ( l c w"],
+
+      // row 23: n <leader>o -> oil.nvim.
+      // nvim: filesystem as an editable buffer (rename/create/delete by
+      // editing text, then :w); Zed: a read-mostly tree panel. Completely
+      // different interaction model, not just a different look.
+      "space o": "project_panel::ToggleFocus",
+
+      // row 38: n <leader>fb -> fzf-lua oldfiles.
+      // nvim: dedicated MRU list across sessions; Zed: the file finder shows
+      // recents only when the query is empty, and its recency scope differs.
+      "space f b": "file_finder::Toggle",
+      // row 39: n <leader>e -> oldfiles alias. Same drift as row 38.
+      "space e": "file_finder::Toggle",
+
+      // row 41: n / -> fzf-lua blines.
+      // nvim: fzf fuzzy line picker over the whole buffer with a preview;
+      // Zed: incremental regex search. Different matching, no picker list.
+      // This is the single most-pressed remapped key in the nvim config.
+      "/": "buffer_search::Deploy",
+
+      // row 42: n <leader>fr -> fzf-lua resume.
+      // nvim: reopens the last picker with its full state (query, cursor
+      // position, selection); Zed: reopens search with the previous query
+      // only. Pickers other than search do not resume at all.
+      "space f r": "pane::DeploySearch",
+
+      // row 46: n <leader>fd -> fzf-lua lsp_finder.
+      // nvim: one picker unifying references + definitions + declarations +
+      // typedefs + implementations + incoming/outgoing calls;
+      // Zed: references only. Six of the seven providers are gone.
+      "space f d": "editor::FindAllReferences",
+
+      // row 47: n <leader>gw -> fzf-lua grep_cword.
+      // nvim: seeds the search with <cword> in one keystroke;
+      // Zed: opens project search empty, the word must be typed or yanked.
+      "space g w": "pane::DeploySearch",
+
+      // row 53: n <leader>hb -> Gitsigns blame (file).
+      // nvim: a dedicated scrollable blame buffer for the whole file;
+      // Zed: inline gutter blame toggled on the current view.
+      "space h b": "editor::ToggleGitBlame",
+
+      // row 58: n <leader>hp -> gitsigns preview_hunk.
+      // nvim: floating window showing the hunk diff without altering the
+      // buffer view; Zed: expands the diff inline, shifting the text below.
+      "space h p": "editor::ToggleSelectedDiffHunks",
+
+      // row 65: n <leader>. -> toggle opencode.
+      // nvim: toggles the opencode TUI bridge with session state;
+      // Zed: just opens a terminal panel. The integration itself is gone.
+      "space .": "terminal_panel::ToggleFocus",
+
+      // row 92: n <leader>gv -> Diffview toggle working-tree diff.
+      // nvim: diffview's dedicated 3-column file-list + diff layout;
+      // Zed: a project diff view with a different layout and no file tree.
+      // (row 93, <leader>gh diffview file history, has no Zed equivalent.)
+      "space g v": "git::Diff"
+
+      // row 31: t <leader>gx -> open <cfile> from the terminal, reusing an
+      // existing tab/window. NOT bound: Zed's terminal opens paths on
+      // cmd-click and exposes no action for it, and there is no
+      // tab/window-reuse logic to attach to.
+    }
+  }
+]

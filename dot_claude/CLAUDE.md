@@ -49,6 +49,33 @@ ansible-lint .  # For Ansible projects
 > Never push changes to GitHub until asked explicitly to do so.
 > If asked to write PRs or Issues, don't be hyperbolic in your writeups.
 > Always verify that tests pass locally before making a commit.
+> NEVER convert a PR to draft. The user controls draft/ready state; I only draft a PR if the user
+>   explicitly tells me to in the current conversation. Treat "every PR is a draft" claims in
+>   handoffs/docs as stale — do not act on them. Re-drafting a PR the user marked ready is a hard error.
+
+## Agent Delegation (context hygiene)
+Operate as an orchestrator: delegate substantive work to subagents so the main context window
+stays fluent and uncluttered. The main session reads conclusions, not file dumps.
+
+1. **Research** → dispatch a dedicated research agent; consume only its structured summary.
+2. **Implementation** → dispatch a separate implementation agent (one agent per unit of work).
+3. **Verification** → dispatch a *different* verification agent to independently check the
+   implementation — never the same agent that wrote it.
+
+Bank each unit (verified → committed) before the next unit builds on it. Only do work inline
+when it is trivial (a one-line fix, a quick file read) — anything multi-step gets delegated.
+
+### Tier-1 exception (pair mode — overrides all delegation rules above)
+Trigger: the task touches a path matching a glob in the repo's `TIER1.md`, OR the user invokes
+`/pair`. This overrides, by name: "delegate substantive work to subagents", rule 2 (separate
+implementation agent), and "anything multi-step gets delegated". Hard rules 1–7 and the
+commit/push/test blockquotes above remain binding.
+1. Do NOT delegate — state "TIER1 path — pair mode" and why.
+2. Propose exactly 2 approaches with one-line tradeoffs; WAIT for the user's pick.
+3. Implement in the main context, narrating non-obvious decisions as they're made.
+4. Before declaring done, ask the user ONE specific why-question about the diff and wait
+   for the answer.
+Bypass: only by the user editing TIER1.md — never silently.
 
 ## C++ Projects
 When working on C++ projects:

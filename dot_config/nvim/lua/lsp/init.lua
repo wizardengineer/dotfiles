@@ -11,16 +11,18 @@ local language_servers = {
   -- "esbonio",            -- ⚠️ Not installed
   -- "cmake-language-server", -- ⚠️ Not installed
 }
-vim.lsp.set_log_level(4)
+-- Was `vim.lsp.set_log_level(4)`: deprecated, removed in Nvim 0.13.
+vim.lsp.log.set_level(vim.log.levels.ERROR)
 
 for _, name in ipairs(language_servers) do
   local ok, config = pcall(require, "lsp." .. name)
   if ok then
     vim.lsp.config[name] = config
-    vim.lsp.enable(name)
   else
-    vim.lsp.enable(name)
+    -- No local override; fall through to whatever nvim-lspconfig ships.
+    vim.notify(("lsp: no local config for %q, using lspconfig default"):format(name), vim.log.levels.DEBUG)
   end
+  vim.lsp.enable(name)
 end
 
 -- vim.lsp.enable("clangd")

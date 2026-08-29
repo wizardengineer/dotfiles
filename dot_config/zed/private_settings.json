@@ -1,0 +1,214 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "project_panel": {
+    "dock": "left"
+  },
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
+  "agent": {
+    "auto_compact": {
+      "threshold": "90%"
+    },
+    "sandbox_permissions": {
+      "allow_unsandboxed": false
+    },
+    "tool_permissions": {
+      "tools": {
+        "fetch": {
+          "default": "allow"
+        },
+        "create_directory": {
+          "default": "allow"
+        },
+        "terminal": {
+          "default": "allow",
+          "always_allow": [
+            {
+              "pattern": "^git\\b"
+            },
+            {
+              "pattern": "^head\\b"
+            },
+            {
+              "pattern": "^echo\\b"
+            }
+          ]
+        }
+      }
+    },
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-opus-5",
+      "enable_thinking": true,
+      "effort": "high"
+    },
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "git_panel": {
+    "dock": "left"
+  },
+  "cli_default_open_behavior": "existing_window",
+  "session": {
+    "trust_all_worktrees": true
+  },
+  "vim_mode": true,
+  // Pinned explicitly: Zed 1.14.2 changed the default base_keymap from
+  // VSCode to Zed. Pinning keeps bindings stable across upgrades.
+  "base_keymap": "Zed",
+  // --- ported from ~/.config/nvim (see research/nvim-config-inventory.md 4b)
+  "vim": {
+    // nvim: clipboard=unnamedplus (system clipboard for all yanks)
+    "use_system_clipboard": "always",
+    // nvim: TextYankPost highlight, 300ms
+    "highlight_on_yank_duration": 300,
+    // nvim never set ignorecase/smartcase, so f/t stayed case-sensitive.
+    // Pinned rather than left implicit.
+    "use_smartcase_find": false,
+    // Applies to vim::Search. NOTE: `/` is rebound below to
+    // buffer_search::Deploy, so this does NOT affect the `/` key.
+    "use_regex_search": true,
+    // Kept false so line numbers stay hybrid in every mode, matching nvim's
+    // `number` + `relativenumber`. Setting this true would flip to absolute
+    // in insert mode, which nvim did not do.
+    "toggle_relative_line_numbers": false
+  },
+  // nvim: number + relativenumber (hybrid) in all modes
+  "relative_line_numbers": "enabled",
+  // nvim: scrolloff=10
+  "vertical_scroll_margin": 10,
+  // nvim: cursorline (init.lua:31) — "all" includes the gutter, matching
+  // vim's cursorline more closely than "line".
+  "current_line_highlight": "all",
+  // nvim: vim.diagnostic virtual_text = true
+  "diagnostics": {
+    "inline": {
+      "enabled": true
+    }
+  },
+  // nvim: nvim-lsp-endhints
+  "inlay_hints": {
+    "enabled": true
+  },
+  // nvim ftplugin/c.lua (2-space, expandtab) and ftplugin/go.lua (8-wide).
+  // Note: nvim's global tabstop=8 / softtabstop=4 / shiftwidth=2 three-way
+  // split has no Zed representation - Zed has one tab_size per language.
+  "languages": {
+    "C": {
+      "tab_size": 2,
+      "hard_tabs": false
+    },
+    "C++": {
+      "tab_size": 2,
+      "hard_tabs": false
+    },
+    "Go": {
+      "tab_size": 8
+    }
+  },
+  // --- end nvim port
+  "edit_predictions": {
+    "provider": "open_ai_compatible_api",
+    "open_ai_compatible_api": {
+      // NOT LM Studio directly -- this is ~/.local/bin/zed-fim-bos.py
+      // (LaunchAgent com.juliusalexandre.zed-fim-bos), which forwards to
+      // LM Studio on :1234 and does three things Zed can't:
+      //   1. prepends the model's BOS. LM Studio's MLX engine tokenizes with
+      //      add_special_tokens=False, so FIM models run off-distribution and
+      //      stop emitting their end token.
+      //   2. injects temperature 0.1. Zed hardcodes `temperature: None`.
+      //   3. truncates completions at leaked markers (<|cursor|> et al).
+      // A GGUF/llama.cpp model must bypass this -- that path adds BOS itself.
+      "api_url": "http://localhost:1235/v1/completions",
+      // qwen2.5-coder-7b, MLX 4bit. ~87 tok/s. Emits a literal <|cursor|> in
+      // ~4.5% of predictions (17/374) -- a weights-level training artifact,
+      // not a special token (it costs 5 tokens as plain text, and appears in
+      // no Qwen2.5-Coder tokenizer at any size). Zed can't filter it, so the
+      // proxy truncates the completion there instead; see JUNK_MARKERS.
+      // Note this model needs NO BOS (Qwen2.5 sets add_bos_token=false), so
+      // it is deliberately absent from the proxy's BOS_BY_MODEL.
+      "model": "qwen2.5-coder-7b",
+      "prompt_format": "qwen",
+      // Runaway bound, not a latency control -- unlike Codestral, this model
+      // stops on its own. Across 12 fills (Python/Rust/C++/Go/TS/SQL) the cap
+      // was hit 0 times: median 12 tokens, p75 16, max 34, median wall 0.31s.
+      // Dropping to 32 would clip real fills and save nothing.
+      //
+      // Alternative if the <|cursor|> artifact still shows through:
+      // deepseek-coder-6.7b-base-mlx + "deepseek_coder", measured 0.14-0.55s,
+      // stops on its own, no artifacts. Needs its BOS, which the proxy adds.
+      "max_output_tokens": 64
+    }
+  },
+  "agent_servers": {
+    // Stock entry, kept so you can switch back in the agent picker.
+    "claude-acp": {
+      "type": "registry"
+    },
+    // Same ACP bridge as the registry entry above, but with a shim directory
+    // first on PATH. The bridge resolves `claude` from PATH, so it picks up
+    // ~/.local/share/zed-claude-yolo/claude, which execs the real binary with
+    // --dangerously-skip-permissions.
+    //
+    // `claude-yolo` in ~/.zshrc is a shell alias and Zed spawns processes
+    // without a shell, so pointing at the alias directly can never work.
+    "claude-yolo": {
+      "default_config_options": {
+        "mode": "bypassPermissions"
+      },
+      "type": "custom",
+      "command": "/opt/homebrew/bin/npx",
+      "args": ["-y", "@agentclientprotocol/claude-agent-acp"],
+      "env": {
+        "PATH": "/Users/juliusalexandre/.local/share/zed-claude-yolo:/opt/homebrew/bin:/Users/juliusalexandre/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      }
+    },
+    // Hermes running inside the coop VM. Use with a remote project opened via
+    // ssh://coop-upgrade/... — Hermes then sees the same /workspace the editor
+    // does. Absolute path because Zed spawns without a shell, so ~/.bashrc
+    // never runs and ~/.local/bin isn't on PATH.
+    //
+    // Two entries because Zed's docs don't state whether agent servers spawn
+    // on the remote host or locally for SSH projects. Try `hermes-coop` first;
+    // if it fails to launch, use `hermes-coop-ssh`.
+    "hermes-coop": {
+      "type": "custom",
+      "command": "/home/ubuntu/.local/bin/hermes",
+      "args": ["acp"],
+      "env": {}
+    },
+    // Fallback: Zed spawned the agent locally, so hop into the guest. The
+    // coop-upgrade alias is written by `coop ssh-config` and refreshed on
+    // `coop start` (Lima reassigns the SSH port each boot).
+    "hermes-coop-ssh": {
+      "type": "custom",
+      "command": "/usr/bin/ssh",
+      "args": ["-T", "coop-upgrade", "/home/ubuntu/.local/bin/hermes acp"],
+      "env": {}
+    }
+  },
+  "icon_theme": {
+    "mode": "light",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)"
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "light",
+    "light": "Ayu Light",
+    "dark": "Gruvbox Dark",
+  },
+}

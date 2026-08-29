@@ -1,9 +1,16 @@
 local preview_on = false
 
-local function set_preview(callback) 
+local function set_preview(callback)
   if preview_on == false then
     callback()
   end
+end
+
+-- Directories macOS refuses to list without Full Disk Access (TCC). Entering one
+-- from oil raises EPERM and paints the buffer red, so keep them out of listings.
+local TCC_PROTECTED = {}
+if vim.uv.os_uname().sysname == "Darwin" then
+  TCC_PROTECTED = { [".Trash"] = true }
 end
 return
 {
@@ -74,7 +81,13 @@ return
                 end,
                 -- This function defines what will never be shown, even when `show_hidden` is set
                 is_always_hidden = function(name, bufnr)
-                    return false
+                    -- macOS TCC protects these; reading them without Full Disk
+                    -- Access fails with EPERM, which oil surfaces as
+                    -- "Error rendering oil buffer oil:///Users/<you>/.Trash/".
+                    -- Hiding them keeps `-` out of an unreadable directory.
+                    -- (Grant Full Disk Access to your terminal if you actually
+                    -- want to browse them, then drop this list.)
+                    return TCC_PROTECTED[name] or false
                 end,
                 -- Sort file names with numbers in a more intuitive order for humans.
                 -- Can be "fast", true, or false. "fast" will turn it off for large directories.

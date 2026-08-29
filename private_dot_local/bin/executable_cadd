@@ -1,37 +1,107 @@
-# credit too: https://github.com/badumbatish/dotfiles/blob/main/private_dot_local/bin/executable_cadd
-
-# INFO: cadd STANDS FOR CHEZMOI ADDING ALL RELATED FILE
+#!/usr/bin/env bash
+# cadd -- CHEZMOI ADD: re-add every managed config, then commit the drift.
 #
-# Add zsh gitconfig
-chezmoi add ~/.zshrc ~/.gitconfig ~/.tmux.conf
-chezmoi add ~/.lldbinit
+# credit: https://github.com/badumbatish/dotfiles/blob/main/private_dot_local/bin/executable_cadd
+#
+# Secrets are excluded by ~/.local/share/chezmoi/.chezmoiignore, which `chezmoi
+# add` honours -- add new credential paths there, not here.
+#
+# Usage:
+#   cadd              add everything and commit
+#   cadd -n           dry run: show what would change, add and commit nothing
+#   cadd -m "msg"     use a custom commit message
 
-# INFO: CLAUDE
-chezmoi add ~/.claude/skills/ 
-chezmoi add ~/.claude/CLAUDE.md
-chezmoi add ~/.claude/settings.json
-chezmoi add ~/.claude/statusline.sh
+set -euo pipefail
 
-# INFO: Neovim config
-rm -rf ~/.local/share/chezmoi/dot_config/nvim/
-chezmoi add ~/.config/nvim
+DRY_RUN=0
+COMMIT_MSG="Automatic update via ~/.local/bin/cadd"
 
-# INFO: Executable
-chezmoi add ~/.local/bin/cadd ~/.local/bin/cinstall ~/.local/bin/cpush 
-chezmoi add ~/.local/bin/fjmp
-chezmoi add ~/.local/bin/sesh
+while getopts "nm:h" opt; do
+  case "$opt" in
+    n) DRY_RUN=1 ;;
+    m) COMMIT_MSG="$OPTARG" ;;
+    h) sed -n '2,12p' "$0"; exit 0 ;;
+    *) exit 2 ;;
+  esac
+done
 
-# INFO: ccache
-chezmoi add ~/.ccache/ccache.conf
+command -v chezmoi >/dev/null || { echo "cadd: chezmoi not on PATH" >&2; exit 1; }
 
+SOURCE_DIR="$(chezmoi source-path)"
 
-# INFO: COMMIT ALL ADDs
-pushd . > /dev/null
+# Add only what exists: this config is shared across machines, and a missing
+# path used to abort the whole run under `set -e`.
+add() {
+  local -a present=()
+  for path in "$@"; do
+    [[ -e "$path" ]] && present+=("$path")
+  done
+  if [[ ${#present[@]} -eq 0 ]]; then
+    return 0
+  fi
+  if [[ $DRY_RUN -eq 1 ]]; then
+    printf '  would add: %s\n' "${present[@]}"
+  else
+    chezmoi add "${present[@]}"
+  fi
+}
 
-cd ~/.local/share/chezmoi/
-git add .
-git status
-git commit -m "Automatic update via ~/.local/bin/cadd"
+echo "==> shell, git, terminal multiplexer"
+add ~/.zshrc ~/.gitconfig ~/.tmux.conf ~/.lldbinit
 
-popd > /dev/null
+echo "==> claude code"
+add ~/.claude/CLAUDE.md ~/.claude/settings.json ~/.claude/statusline.sh
+add ~/.claude/skills
 
+echo "==> neovim"
+# Removed first: chezmoi does not prune files deleted from the target, so a
+# renamed or dropped plugin spec would otherwise linger in the source tree.
+if [[ $DRY_RUN -eq 0 ]]; then
+  rm -rf "$SOURCE_DIR/dot_config/nvim/"
+fi
+add ~/.config/nvim
+
+echo "==> zed"
+add ~/.config/zed/settings.json ~/.config/zed/keymap.json
+add ~/.config/zed/IMPOSSIBLE.md ~/.config/zed/research
+
+echo "==> pi"
+# auth.json / models.json / trust.json are held back by .chezmoiignore.
+add ~/.pi/agent/settings.json ~/.pi/agent/AGENTS.md
+add ~/.pi/agent/agents ~/.pi/agent/skills
+
+echo "==> terminal & tui"
+add ~/.config/kitty ~/.config/btop/btop.conf ~/.config/atuin/config.toml
+
+echo "==> window management"
+add ~/.config/skhd
+
+echo "==> executables"
+add ~/.local/bin/cadd ~/.local/bin/cinstall ~/.local/bin/cpush
+add ~/.local/bin/fjmp ~/.local/bin/sesh
+
+echo "==> ccache"
+add ~/.ccache/ccache.conf
+
+if [[ $DRY_RUN -eq 1 ]]; then
+  echo
+  echo "==> dry run; source tree drift that would be committed:"
+  git -C "$SOURCE_DIR" status --short
+  exit 0
+fi
+
+echo
+echo "==> committing"
+cd "$SOURCE_DIR"
+git add -A
+
+if git diff --cached --quiet; then
+  echo "cadd: nothing changed, no commit made."
+  exit 0
+fi
+
+git status --short
+git commit -m "$COMMIT_MSG"
+
+echo
+echo "cadd: committed. Run 'cpush' to publish."

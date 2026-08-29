@@ -1,4 +1,5 @@
 require('configs.options')
+require('configs.llvm_style')
 require('configs.keymaps')
 require('configs.folding')
 require('configs.commands')

@@ -1,23 +1,31 @@
-vim.opt.hlsearch = true
-vim.opt.mouse = "a"
+vim.o.hlsearch = true
+vim.o.mouse = "a"
 
-vim.cmd("set clipboard+=unnamedplus")
+vim.opt.clipboard:append("unnamedplus")
 
+vim.o.relativenumber = true
+vim.o.number         = true
+vim.o.cursorline     = true
 
-vim.opt.relativenumber = true
-vim.opt.number         = true
+vim.o.scrolloff      = 10
 
-vim.opt.scrolloff      = 10
-vim.opt.tabstop        = 8
-vim.opt.softtabstop    = 4
-vim.opt.shiftwidth     = 2
--- vim.opt.expandtab      = true
-vim.opt.incsearch      = true
+-- LLVM house style: spaces, 2-column indents. (Previously came from the
+-- sourced `vimrc`, which silently overrode whatever was set here.)
+vim.o.tabstop        = 8
+vim.o.softtabstop    = 2
+vim.o.shiftwidth     = 2
+vim.o.expandtab      = true
+vim.o.smarttab       = true
 
-vim.opt.spell          = false
-vim.opt.jumpoptions = "stack,view"
-vim.opt.termguicolors  = true
-vim.opt.syntax         = "on"
+vim.o.incsearch      = true
+
+vim.o.spell          = false
+vim.o.jumpoptions    = "stack,view"
+vim.o.termguicolors  = true
+
+-- `syntax=on` is no longer set: treesitter (`vim.treesitter.start`) owns
+-- highlighting, and regex syntax on top of it just costs redraw time.
+-- Legacy filetypes without a parser still fall back via ftplugin/syntax files.
 
 vim.diagnostic.config({
     virtual_text = true,

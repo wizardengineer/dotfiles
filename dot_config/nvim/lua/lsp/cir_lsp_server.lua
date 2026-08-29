@@ -8,7 +8,7 @@ local meta_configs = require 'meta_configs'
 
 ---@type vim.lsp.Config
 return {
-  cmd = { meta_configs.clangir_repo .. '/build/bin/cir-lsp-server' },
+  cmd = { meta_configs.llvm_tool('cir-lsp-server', { meta_configs.clangir_repo .. 'build/bin/cir-lsp-server' }) },
   filetypes = { 'cir' },
   root_markers = { '.git' },
 }
