@@ -37,10 +37,25 @@ if [[ $DRY_RUN -eq 1 ]]; then
   exit 0
 fi
 
-if git rev-parse --abbrev-ref '@{upstream}' >/dev/null 2>&1; then
-  git push
-else
-  git push --set-upstream origin "$BRANCH"
+> /dev/null 2>&1 git rev-parse --abbrev-ref '@{upstream}' \
+  && UPSTREAM_ARGS=() \
+  || UPSTREAM_ARGS=(--set-upstream origin "$BRANCH")
+
+# The osxkeychain helper does not always hold a github.com credential, which
+# fails as "could not read Username for 'https://github.com'". `gh` is already
+# authenticated, so fall back to its credential helper rather than making this
+# interactive. Scoped to this invocation -- ~/.gitconfig is chezmoi-managed and
+# should not pick up drift from a push.
+if ! git push "${UPSTREAM_ARGS[@]}" 2>/tmp/cpush-err; then
+  if grep -q "could not read Username" /tmp/cpush-err && command -v gh >/dev/null; then
+    echo "cpush: keychain has no github.com credential, retrying via gh" >&2
+    git -c credential.helper='!gh auth git-credential' push "${UPSTREAM_ARGS[@]}"
+  else
+    cat /tmp/cpush-err >&2
+    rm -f /tmp/cpush-err
+    exit 1
+  fi
 fi
+rm -f /tmp/cpush-err
 
 echo "cpush: pushed '$BRANCH' to $(git remote get-url origin)"
