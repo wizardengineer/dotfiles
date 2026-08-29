@@ -37,25 +37,32 @@ if [[ $DRY_RUN -eq 1 ]]; then
   exit 0
 fi
 
-> /dev/null 2>&1 git rev-parse --abbrev-ref '@{upstream}' \
-  && UPSTREAM_ARGS=() \
-  || UPSTREAM_ARGS=(--set-upstream origin "$BRANCH")
+# macOS ships bash 3.2, where an empty array under `set -u` is an error, so
+# these stay as plain functions rather than an argument array.
+do_push() {
+  if git rev-parse --abbrev-ref '@{upstream}' >/dev/null 2>&1; then
+    git "$@" push
+  else
+    git "$@" push --set-upstream origin "$BRANCH"
+  fi
+}
 
 # The osxkeychain helper does not always hold a github.com credential, which
 # fails as "could not read Username for 'https://github.com'". `gh` is already
-# authenticated, so fall back to its credential helper rather than making this
-# interactive. Scoped to this invocation -- ~/.gitconfig is chezmoi-managed and
-# should not pick up drift from a push.
-if ! git push "${UPSTREAM_ARGS[@]}" 2>/tmp/cpush-err; then
-  if grep -q "could not read Username" /tmp/cpush-err && command -v gh >/dev/null; then
+# authenticated, so fall back to its credential helper rather than leaving this
+# to hang on an interactive prompt. Scoped to this invocation -- ~/.gitconfig is
+# chezmoi-managed and should not pick up drift from a push.
+ERR_LOG="$(mktemp -t cpush)"
+trap 'rm -f "$ERR_LOG"' EXIT
+
+if ! do_push 2>"$ERR_LOG"; then
+  if grep -q "could not read Username" "$ERR_LOG" && command -v gh >/dev/null; then
     echo "cpush: keychain has no github.com credential, retrying via gh" >&2
-    git -c credential.helper='!gh auth git-credential' push "${UPSTREAM_ARGS[@]}"
+    do_push -c "credential.helper=!gh auth git-credential"
   else
-    cat /tmp/cpush-err >&2
-    rm -f /tmp/cpush-err
+    cat "$ERR_LOG" >&2
     exit 1
   fi
 fi
-rm -f /tmp/cpush-err
 
 echo "cpush: pushed '$BRANCH' to $(git remote get-url origin)"
