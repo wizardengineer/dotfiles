@@ -32,6 +32,10 @@ return {
             checkOnSave = true,
             check = {
                 command = 'clippy',
+                -- Defaults to true, which checks `bin "cli"` AND `bin "cli"
+                -- test` and reports every diagnostic twice (cargo itself says
+                -- so: `(bin "cli" test) generated 3 warnings (3 duplicates)`).
+                allTargets = false,
             },
             procMacro = {
                 enable = true,

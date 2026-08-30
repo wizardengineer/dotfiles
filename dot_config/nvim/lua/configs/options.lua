@@ -27,8 +27,23 @@ vim.o.termguicolors  = true
 -- highlighting, and regex syntax on top of it just costs redraw time.
 -- Legacy filetypes without a parser still fall back via ftplugin/syntax files.
 
+-- Plain `virtual_text = true` drew every line's message at end-of-line, where
+-- it collided with nvim-lsp-endhints' inlay hints and gitsigns'
+-- current_line_blame. Rust is the worst case: rust-analyzer emits long single
+-- strings like "expected enum `std::result::Result<(), anyhow::Error>`, found
+-- unit type `()`", which overlap both.
+--
+-- `virtual_lines` fixes the overlap but is worse overall -- it pushes code
+-- down by however many lines the message needs (6, for one unused variable).
+--
+-- `current_line` keeps virtual_text but scopes it to the cursor's line: no
+-- layout shift ever, and only one line can contest the end-of-line space.
+-- Full message on demand via <leader>ld (see lua/lsp/init.lua).
 vim.diagnostic.config({
-    virtual_text = true,
+    virtual_text  = { current_line = true },
+    virtual_lines = false,
+    underline     = true,
+    severity_sort = true,
 })
 
 -- Enable autoread

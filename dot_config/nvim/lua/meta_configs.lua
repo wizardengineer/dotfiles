@@ -18,6 +18,12 @@ if sysname == "Linux" then
   M.prebuilt_llvm_bin = M.home .. "/Projects/MainRepo/LLVM-21.1.2-Linux-X64/bin/"
 end
 
+--- Package-manager LLVM, searched last. Homebrew's llvm is keg-only, so its
+--- bin/ is not on $PATH and `exepath` never finds these. Without this,
+--- tblgen-lsp-server and mlir-lsp-server resolve to a bare name and silently
+--- fail to spawn even though they are installed.
+M.system_llvm_bin = sysname == "Darwin" and "/opt/homebrew/opt/llvm/bin/" or "/usr/lib/llvm/bin/"
+
 --- Resolve an LLVM tool to the first candidate that actually exists.
 ---
 --- The hardcoded trees above are not present on every machine. Handing
@@ -32,6 +38,7 @@ function M.llvm_tool(name, extra)
   local candidates = vim.list_extend(vim.deepcopy(extra or {}), {
     M.prebuilt_llvm_bin .. name,
     M.llvm_bin .. name,
+    M.system_llvm_bin .. name,
   })
   for _, path in ipairs(candidates) do
     if vim.uv.fs_stat(path) then

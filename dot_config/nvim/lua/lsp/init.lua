@@ -55,3 +55,12 @@ vim.keymap.set("n", "<leader>lr", vim.lsp.buf.rename,
 
 vim.keymap.set('n', '<leader>lt', vim.lsp.buf.typehierarchy,
   { desc = "type hierachy" })
+
+-- Diagnostics render as current-line virtual_text only (lua/configs/options.lua),
+-- which truncates long rustc messages. This shows the full text, including the
+-- help/note sub-messages, in a float.
+-- <leader>ld is lldb's quickfix map, <leader>le/<leader>lw populate quickfix
+-- from LSP errors/warnings; <leader>lD is the free one in that group.
+vim.keymap.set('n', '<leader>lD', function()
+  vim.diagnostic.open_float({ border = 'single', source = true })
+end, { desc = "Show full diagnostic under cursor" })
