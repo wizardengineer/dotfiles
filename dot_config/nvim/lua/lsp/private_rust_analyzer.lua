@@ -25,7 +25,12 @@ return {
                 allFeatures = true,
                 loadOutDirsFromCheck = true,
             },
-            checkOnSave = {
+            -- `checkOnSave` is a bool in current rust-analyzer; the command
+            -- moved to `check.command`. The old nested form is rejected at
+            -- startup ("invalid type: map, expected a boolean") and clippy
+            -- then never runs.
+            checkOnSave = true,
+            check = {
                 command = 'clippy',
             },
             procMacro = {

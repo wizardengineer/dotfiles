@@ -2,6 +2,7 @@ local language_servers = {
   "lua_ls",                -- ✅ Lua LSP (installed)
   "pylsp",                 -- ✅ Python LSP (installed)
   "clangd",                -- ✅ C/C++ LSP (works\!)
+  "rust_analyzer",         -- ✅ Rust LSP (rustup component, ~/.cargo/bin)
   "tblgen_lsp_server",     -- ✅ TableGen LSP (fixed path\!)
   "mlir_lsp_server",       -- ✅ MLIR LSP (fixed path\!)
   -- "cir_lsp_server",     -- ⚠️ Enable if you have ClangIR built
@@ -26,8 +27,6 @@ for _, name in ipairs(language_servers) do
 end
 
 -- vim.lsp.enable("clangd")
-
--- vim.lsp.enable('rust_analyzer')
 
 
 
